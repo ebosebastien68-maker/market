@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header h1 i {
+            color: #667eea;
+        }
+
+        .mark-all-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+
+        .mark-all-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px;
+            background: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .notifications-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .notification-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            display: flex;
+            gap: 15px;
+            align-items: flex-start;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .notification-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: transparent;
+            transition: background 0.3s;
+        }
+
+        .notification-card.unread {
+            background: #f8f9ff;
+        }
+
+        .notification-card.unread::before {
+            background: #667eea;
+        }
+
+        .notification-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.12);
+        }
+
+        .notif-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .notif-icon.reaction {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .notif-icon.comment {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .notif-icon.reply {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        .notif-content {
+            flex: 1;
+        }
+
+        .notif-text {
+            color: #333;
+            line-height: 1.6;
+            margin-bottom: 8px;
+        }
+
+        .notif-meta {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 13px;
+            color: #999;
+        }
+
+        .notif-time {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .notif-badge {
+            background: #667eea;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            color: #ff4757;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 5px;
+            transition: transform 0.2s;
+        }
+
+        .delete-btn:hover {
+            transform: scale(1.2);
+        }
+
+        .loader {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: #999;
+        }
+
+        .empty-state i {
+            font-size: 80px;
+            margin-bottom: 20px;
+            color: #ddd;
+        }
+
+        .empty-state h3 {
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .filter-info {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .filter-info span {
+            color: #666;
+            font-weight: 600;
+        }
+
+        .count-badge {
+            background: #667eea;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>
+                <i class="fas fa-bell"></i>
+                Notifications
+            </h1>
+            <button class="mark-all-btn" onclick="markAllAsRead()" id="mark-all-btn">
+                <i class="fas fa-check-double"></i> Tout marquer comme lu
+            </button>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="filterNotifications('all', event)">
+                <i class="fas fa-list"></i> Toutes
+            </button>
+            <button class="tab" onclick="filterNotifications('unread', event)">
+                <i class="fas fa-envelope"></i> Non lues
+            </button>
+            <button class="tab" onclick="filterNotifications('read', event)">
+                <i class="fas fa-envelope-open"></i> Lues
+            </button>
+        </div>
+
+        <div class="filter-info" id="filter-info">
+            <span id="filter-text">Toutes les notifications</span>
+            <span class="count-badge" id="notif-count">0</span>
+        </div>
+
+        <div id="loader" class="loader">
+            <div class="spinner"></div>
+            <p style="color: #999;">Chargement des notifications...</p>
+        </div>
+
+        <div class="notifications-list" id="notifications-list"></div>
+
+        <div class="empty-state" id="empty-state" style="display: none;">
+            <i class="fas fa-bell-slash"></i>
+            <h3>Aucune notification</h3>
+            <p>Vous n'avez aucune notification pour le moment</p>
+        </div>
+    </div>
+
+    <script src="supabaseClient.js"></script>
+    <script>
+        const { supabase, getCurrentUser, getUserProfile } = window.supabaseClient;
+        let currentUser = null;
+        let userProfile = null; // MISE À JOUR : Pour stocker le profil et le rôle
+        let allNotifications = [];
+        let currentFilter = 'all';
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            currentUser = await getCurrentUser();
+            if (!currentUser) {
+                window.location.href = 'connexion.html';
+                return;
+            }
+            
+            // MISE À JOUR : Récupérer le profil pour connaître le rôle
+            userProfile = await getUserProfile(currentUser.id);
+
+            await loadNotifications();
+            // Optionnel : recharger périodiquement
+            // setInterval(loadNotifications, 30000); 
+        });
+
+        async function loadNotifications() {
+            try {
+                // La logique reste la même : chaque utilisateur récupère les notifications qui lui sont destinées.
+                // La création de ces notifications est gérée par l'adminpro, comme défini dans le SQL.
+                const { data: notifications, error } = await supabase
+                    .from('notifications')
+                    .select('*')
+                    .eq('user_id', currentUser.id)
+                    .order('date_created', { ascending: false });
+
+                if (error) throw error;
+
+                allNotifications = notifications || [];
+                // Appliquer le filtre actuel après chargement
+                filterNotifications(currentFilter);
+
+                document.getElementById('loader').style.display = 'none';
+
+            } catch (error) {
+                console.error('Erreur:', error);
+                document.getElementById('loader').innerHTML = '<p style="color: #ff4757;">Erreur de chargement</p>';
+            }
+        }
+
+        function filterNotifications(filter, event) {
+            currentFilter = filter;
+
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            // Utiliser l'event si disponible, sinon trouver le bon bouton par une autre méthode
+            if (event) {
+                event.currentTarget.classList.add('active');
+            } else {
+                document.querySelector(`.tab[onclick*="'${filter}'"]`).classList.add('active');
+            }
+
+            let filtered = allNotifications;
+            let filterText = 'Toutes les notifications';
+
+            if (filter === 'unread') {
+                filtered = allNotifications.filter(n => !n.read_status);
+                filterText = 'Notifications non lues';
+            } else if (filter === 'read') {
+                filtered = allNotifications.filter(n => n.read_status);
+                filterText = 'Notifications lues';
+            }
+
+            document.getElementById('filter-text').textContent = filterText;
+            document.getElementById('notif-count').textContent = filtered.length;
+
+            displayNotifications(filtered);
+        }
+
+        function displayNotifications(notifications) {
+            const container = document.getElementById('notifications-list');
+            const emptyState = document.getElementById('empty-state');
+
+            container.innerHTML = '';
+            if (notifications.length === 0) {
+                emptyState.style.display = 'block';
+            } else {
+                emptyState.style.display = 'none';
+                notifications.forEach(notif => {
+                    const card = createNotificationCard(notif);
+                    container.appendChild(card);
+                });
+            }
+
+            const unreadCount = allNotifications.filter(n => !n.read_status).length;
+            document.getElementById('mark-all-btn').style.display = unreadCount > 0 ? 'block' : 'none';
+        }
+
+        function createNotificationCard(notif) {
+            const card = document.createElement('div');
+            card.className = `notification-card ${!notif.read_status ? 'unread' : ''}`;
+
+            const iconClass = getNotificationIcon(notif.texte);
+            const iconType = getNotificationType(notif.texte);
+            const timeAgo = formatTimeAgo(notif.date_created);
+
+            // MISE À JOUR : Affichage conditionnel du bouton de suppression
+            const deleteButtonHtml = userProfile && userProfile.role === 'adminpro' 
+                ? `<button class="delete-btn" onclick="deleteNotification('${notif.notification_id}', event)">
+                       <i class="fas fa-trash-alt"></i>
+                   </button>`
+                : '';
+
+            card.innerHTML = `
+                <div class="notif-icon ${iconType}">
+                    <i class="${iconClass}"></i>
+                </div>
+                <div class="notif-content">
+                    <div class="notif-text">${escapeHtml(notif.texte)}</div>
+                    <div class="notif-meta">
+                        <div class="notif-time">
+                            <i class="far fa-clock"></i>
+                            <span>${timeAgo}</span>
+                        </div>
+                        ${!notif.read_status ? '<span class="notif-badge">Nouveau</span>' : ''}
+                    </div>
+                </div>
+                ${deleteButtonHtml}
+            `;
+
+            if (!notif.read_status) {
+                card.addEventListener('click', (e) => {
+                    if (!e.target.closest('.delete-btn')) {
+                        markAsRead(notif.notification_id);
+                    }
+                });
+            }
+
+            return card;
+        }
+
+        // ... Les fonctions getNotificationIcon, getNotificationType, formatTimeAgo restent identiques ...
+        function getNotificationIcon(text) {
+            const textLower = text.toLowerCase();
+            if (textLower.includes('réaction')) return 'fas fa-heart';
+            if (textLower.includes('commentaire')) return 'fas fa-comment';
+            if (textLower.includes('réponse')) return 'fas fa-reply';
+            if (textLower.includes('article') || textLower.includes('publication')) return 'fas fa-newspaper';
+            if (textLower.includes('message')) return 'fas fa-envelope';
+            return 'fas fa-info-circle';
+        }
+
+        function getNotificationType(text) {
+            const textLower = text.toLowerCase();
+            if (textLower.includes('réaction')) return 'reaction';
+            if (textLower.includes('commentaire')) return 'comment';
+            if (textLower.includes('réponse')) return 'reply';
+            return '';
+        }
+        
+        function formatTimeAgo(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diff = now - date;
+            const seconds = Math.floor(diff / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
+            const months = Math.floor(days / 30);
+            const years = Math.floor(days / 365);
+            if (years > 0) return `Il y a ${years} an${years > 1 ? 's' : ''}`;
+            if (months > 0) return `Il y a ${months} mois`;
+            if (days > 0) return `Il y a ${days} jour${days > 1 ? 's' : ''}`;
+            if (hours > 0) return `Il y a ${hours} heure${hours > 1 ? 's' : ''}`;
+            if (minutes > 0) return `Il y a ${minutes} minute${minutes > 1 ? 's' : ''}`;
+            return 'À l\'instant';
+        }
+
+        async function markAsRead(notificationId) {
+            try {
+                // L'utilisateur peut marquer ses propres notifications comme lues.
+                // La policy SQL devrait être ajustée pour permettre UPDATE par le propriétaire.
+                // On suppose ici que la policy `FOR ALL` de l'adminpro est pour INSERT/DELETE, 
+                // et qu'une autre policy (non fournie) permet à l'utilisateur de faire UPDATE.
+                await supabase
+                    .from('notifications')
+                    .update({ read_status: true })
+                    .eq('notification_id', notificationId);
+
+                // Mettre à jour l'état localement pour une UI réactive
+                const notif = allNotifications.find(n => n.notification_id === notificationId);
+                if (notif) notif.read_status = true;
+                filterNotifications(currentFilter);
+
+            } catch (error) {
+                console.error('Erreur:', error);
+            }
+        }
+
+        async function markAllAsRead() {
+            try {
+                await supabase
+                    .from('notifications')
+                    .update({ read_status: true })
+                    .eq('user_id', currentUser.id)
+                    .eq('read_status', false);
+
+                allNotifications.forEach(n => n.read_status = true);
+                filterNotifications(currentFilter);
+
+            } catch (error) {
+                console.error('Erreur:', error);
+                alert('Erreur lors de la mise à jour');
+            }
+        }
+
+        async function deleteNotification(notificationId, event) {
+            event.stopPropagation();
+            
+            // Sécurité côté client : double vérification que l'utilisateur est bien adminpro
+            if (!userProfile || userProfile.role !== 'adminpro') {
+                alert("Vous n'avez pas les droits pour effectuer cette action.");
+                return;
+            }
+
+            if (!confirm('Voulez-vous vraiment supprimer cette notification ?')) {
+                return;
+            }
+
+            try {
+                await supabase
+                    .from('notifications')
+                    .delete()
+                    .eq('notification_id', notificationId);
+                
+                // Mettre à jour l'UI après la suppression
+                allNotifications = allNotifications.filter(n => n.notification_id !== notificationId);
+                filterNotifications(currentFilter);
+
+            } catch (error) {
+                console.error('Erreur:', error);
+                alert('Erreur lors de la suppression');
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
