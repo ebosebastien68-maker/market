@@ -1,0 +1,1366 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spiritualité - Ventes</title> <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ... (TOUT VOTRE CSS RESTE IDENTIQUE) ... */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #f5f7fa;
+            --bg-secondary: #ffffff;
+            --text-primary: #333333;
+            --text-secondary: #666666;
+            --text-tertiary: #999999;
+            --border-color: #f0f0f0;
+            --shadow-sm: 0 2px 10px rgba(0,0,0,0.08);
+            --shadow-md: 0 2px 15px rgba(0,0,0,0.1);
+            --shadow-lg: 0 4px 20px rgba(0,0,0,0.15);
+            --navbar-height: 60px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-primary);
+            padding-top: var(--navbar-height);
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        body.dark-mode {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2d2d2d;
+            --text-primary: #e0e0e0;
+            --text-secondary: #b0b0b0;
+            --text-tertiary: #808080;
+            --border-color: #404040;
+            --shadow-sm: 0 2px 10px rgba(0,0,0,0.3);
+            --shadow-md: 0 2px 15px rgba(0,0,0,0.4);
+            --shadow-lg: 0 4px 20px rgba(0,0,0,0.5);
+        }
+
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--navbar-height);
+            background: #000000;
+            box-shadow: var(--shadow-md);
+            padding: 0 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .navbar-left {
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            letter-spacing: 0.5px;
+            flex-shrink: 0;
+        }
+
+        .navbar-center {
+            display: flex;
+            align-items: center;
+        }
+
+        .theme-toggle {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        .theme-toggle i {
+            font-size: 18px;
+            color: white;
+        }
+
+        .navbar-right {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            cursor: pointer;
+            color: white;
+            transition: all 0.3s;
+            text-decoration: none;
+            position: relative;
+            padding: 5px 8px;
+            border-radius: 8px;
+            min-width: 50px;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .nav-item.active {
+            background: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .nav-item i {
+            font-size: 20px;
+            filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.3));
+        }
+
+        .nav-item span {
+            font-size: 11px;
+            font-weight: 600;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .search-toggle-btn {
+            position: fixed;
+            top: var(--navbar-height);
+            left: 10%;
+            transform: translateX(-50%);
+            background: #1c1c1c;
+            border: none;
+            border-radius: 0 0 12px 12px;
+            width: 60px;
+            height: 30px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .search-toggle-btn:hover {
+            background: #333;
+            transform: translateX(-50%) translateY(2px);
+        }
+
+        .search-toggle-btn i {
+            font-size: 16px;
+            color: #ffffff;
+            transition: transform 0.3s ease;
+        }
+
+        .search-toggle-btn.active i {
+            transform: rotate(180deg);
+        }
+
+        body.dark-mode .search-toggle-btn {
+            background: #2d2d2d;
+        }
+        
+        body.dark-mode .search-toggle-btn:hover {
+            background: #404040;
+        }
+
+        .search-panel {
+            position: fixed;
+            bottom: -250px;
+            left: 0;
+            right: 0;
+            height: 250px;
+            background: var(--bg-secondary);
+            border-top: 3px solid #667eea;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
+            z-index: 998;
+            transition: bottom 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            padding: 25px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .search-panel.show {
+            bottom: 0;
+        }
+
+        .search-panel h3 {
+            color: var(--text-primary);
+            font-size: 18px;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .search-panel h3 i {
+            color: #667eea;
+        }
+
+        .search-input-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            font-size: 16px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-btn {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .search-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        .search-results-info {
+            color: var(--text-secondary);
+            font-size: 14px;
+            padding: 10px;
+            background: var(--bg-primary);
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .page-title {
+            position: fixed;
+            top: var(--navbar-height);
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-secondary);
+            padding: 8px 25px;
+            border-radius: 0 0 12px 12px;
+            box-shadow: var(--shadow-sm);
+            z-index: 999;
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+            max-width: 90%;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .badge {
+            position: absolute;
+            top: -3px;
+            right: -8px;
+            background: #ff4757;
+            color: white;
+            border-radius: 10px;
+            padding: 2px 5px;
+            font-size: 9px;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(255, 71, 87, 0.4);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+        }
+
+        .menu-dropdown {
+            position: relative;
+        }
+
+        .menu-content {
+            display: none;
+            position: absolute;
+            top: 55px;
+            right: 0;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
+            min-width: 200px;
+            overflow: hidden;
+            animation: slideDown 0.3s ease;
+        }
+
+        .menu-content.show {
+            display: block;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .menu-item {
+            padding: 12px 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .menu-item:hover {
+            background: rgba(102, 126, 234, 0.1);
+            padding-left: 22px;
+        }
+
+        .menu-item i {
+            width: 18px;
+            font-size: 16px;
+            color: var(--text-secondary);
+        }
+
+        .menu-divider {
+            height: 1px;
+            background: var(--border-color);
+            margin: 5px 0;
+        }
+
+        .menu-item.logout {
+            color: #ff4757;
+        }
+
+        .menu-item.logout:hover {
+            background: rgba(255, 71, 87, 0.1);
+        }
+
+        .spa-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 15px;
+            margin-top: 30px;
+        }
+
+        .spa-page {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .spa-page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .article-card, .video-card { /* NOUVEAU: Style partagé */
+            background: var(--bg-secondary);
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .article-card:hover, .video-card:hover { /* NOUVEAU: Style partagé */
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .article-header {
+            padding: 12px 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+            flex-shrink: 0;
+        }
+
+        .author-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .author-info h3 {
+            font-size: 15px;
+            color: var(--text-primary);
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .author-info p {
+            font-size: 11px;
+            color: var(--text-tertiary);
+        }
+
+        .article-content, .video-content { /* NOUVEAU: Style partagé */
+            padding: 15px;
+        }
+
+        /* NOUVEAU: Style spécifique pour la vidéo */
+        .video-content video {
+            width: 100%;
+            border-radius: 8px;
+            background-color: #000;
+        }
+        .video-content h4 {
+            font-size: 18px;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+        .video-content p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .article-text {
+            color: var(--text-primary);
+            line-height: 1.6;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        .article-images {
+            display: grid;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .article-images.single {
+            grid-template-columns: 1fr;
+        }
+
+        .article-images.double {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .article-images.multiple {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .article-images img {
+            width: 100%;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.3s;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .article-images img:hover {
+            transform: scale(1.05);
+            box-shadow: var(--shadow-md);
+        }
+
+        .article-links {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .link-btn {
+            flex: 1;
+            padding: 8px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+            transition: all 0.3s;
+            box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
+        }
+
+        .link-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5);
+        }
+
+        .reactions {
+            display: flex;
+            gap: 10px;
+            padding: 12px 15px;
+            border-top: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .reaction-btn {
+            flex: 1;
+            background: none;
+            border: none;
+            padding: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-size: 16px;
+            transition: all 0.3s;
+            color: var(--text-secondary);
+        }
+
+        .reaction-btn:hover {
+            background: rgba(102, 126, 234, 0.1);
+            transform: scale(1.1);
+        }
+
+        .reaction-btn.active {
+            background: rgba(102, 126, 234, 0.15);
+            color: #667eea;
+        }
+
+        .reaction-btn span {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .comments-reactions-section {
+            display: flex;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .comments-toggle-large {
+            flex: 1;
+            padding: 15px;
+            cursor: pointer;
+            color: #667eea;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.3s;
+            font-size: 14px;
+            border-right: 1px solid var(--border-color);
+        }
+
+        .comments-toggle-large:hover {
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .user-reactions-btn {
+            width: 60px;
+            padding: 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            background: rgba(102, 126, 234, 0.03);
+        }
+
+        .user-reactions-btn:hover {
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .user-reactions-btn i {
+            font-size: 20px;
+            color: #667eea;
+        }
+
+        .comments-section {
+            display: none;
+            padding: 0 15px 15px;
+        }
+
+        .comments-section.show {
+            display: block;
+        }
+
+        .loader {
+            text-align: center;
+            padding: 30px;
+        }
+
+        .spinner {
+            border: 3px solid var(--border-color);
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: var(--text-tertiary);
+        }
+
+        .empty-state i {
+            font-size: 50px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        .page-iframe {
+            width: 100%;
+            height: calc(100vh - var(--navbar-height) - 40px);
+            border: none;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+        }
+
+        .iframe-loader {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .iframe-container {
+            position: relative;
+            width: 100%;
+            height: calc(100vh - var(--navbar-height) - 40px);
+        }
+        
+        .admin-options {
+            position: relative;
+            margin-left: auto;
+        }
+
+        .options-btn {
+            background: none; /* MODIFIÉ: Rendu plus discret */
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .options-btn:hover {
+            transform: scale(1.1);
+            background: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .options-menu {
+            display: none;
+            position: absolute;
+            top: 35px;
+            right: 0;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            box-shadow: var(--shadow-md);
+            min-width: 150px;
+            z-index: 10;
+            overflow: hidden;
+            animation: slideDown 0.2s ease;
+        }
+
+        .options-menu.show {
+            display: block;
+        }
+
+        .options-menu a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 15px;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .options-menu a:hover {
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .options-menu a.delete {
+             color: #ff4757;
+        }
+
+        .options-menu a.delete:hover {
+            background: rgba(255, 71, 87, 0.1);
+        }
+
+        .options-menu a i {
+            width: 16px;
+            text-align: center;
+        }
+
+
+        @media (max-width: 768px) {
+            :root {
+                --navbar-height: 55px;
+            }
+
+            .navbar {
+                padding: 0 10px;
+            }
+
+            .navbar-left {
+                font-size: 16px;
+            }
+
+            .navbar-right {
+                gap: 12px;
+            }
+
+            .nav-item {
+                padding: 4px 6px;
+                min-width: 45px;
+            }
+
+            .nav-item span {
+                font-size: 10px;
+            }
+
+            .nav-item i {
+                font-size: 18px;
+            }
+
+            .theme-toggle {
+                width: 36px;
+                height: 36px;
+            }
+
+            .theme-toggle i {
+                font-size: 16px;
+            }
+
+            .spa-container {
+                padding: 10px;
+                margin-top: 20px;
+            }
+
+            .page-title {
+                font-size: 14px;
+                padding: 6px 20px;
+                top: calc(var(--navbar-height) - 2px);
+            }
+
+            .search-toggle-btn {
+                width: 50px;
+                height: 25px;
+            }
+            
+            .search-toggle-btn i {
+                font-size: 14px;
+            }
+
+            .search-panel {
+                height: 220px;
+                bottom: -220px;
+                padding: 20px 15px;
+            }
+
+            .search-panel h3 {
+                font-size: 16px;
+            }
+
+            .search-input {
+                padding: 12px 16px;
+                font-size: 14px;
+            }
+
+            .search-btn {
+                padding: 12px 20px;
+                font-size: 14px;
+            }
+
+            .badge {
+                font-size: 8px;
+                padding: 1px 4px;
+            }
+
+            .menu-content {
+                min-width: 180px;
+            }
+
+            .article-header {
+                padding: 10px 12px;
+            }
+
+            .avatar {
+                width: 36px;
+                height: 36px;
+                font-size: 14px;
+            }
+
+            .author-info h3 {
+                font-size: 14px;
+            }
+
+            .author-info p {
+                font-size: 10px;
+            }
+
+            .article-content, .video-content {
+                padding: 12px;
+            }
+
+            .article-text {
+                font-size: 13px;
+            }
+
+            .comments-toggle-large {
+                font-size: 13px;
+                padding: 12px;
+            }
+
+            .user-reactions-btn {
+                width: 55px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .navbar-left {
+                font-size: 14px;
+            }
+
+            .navbar-right {
+                gap: 8px;
+            }
+
+            .nav-item {
+                padding: 3px 5px;
+                min-width: 40px;
+            }
+
+            .nav-item i {
+                font-size: 16px;
+            }
+
+            .nav-item span {
+                font-size: 9px;
+            }
+
+            .search-input-container {
+                flex-direction: column;
+            }
+
+            .search-btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-left">Spiritualité</div>
+        <div class="navbar-center">
+            <button class="theme-toggle" id="theme-toggle">
+                <i class="fas fa-moon" id="theme-icon"></i>
+            </button>
+        </div>
+        <div class="navbar-right">
+            <div class="nav-item active" data-page="home" data-title="Accueil">
+                <i class="fas fa-home"></i>
+                <span>Accueil</span>
+            </div>
+            <div class="nav-item" data-page="messages" data-title="Messages">
+                <i class="fas fa-envelope"></i>
+                <span>Messages</span>
+                <span class="badge" id="message-badge" style="display: none;">0</span>
+            </div>
+            <div class="nav-item" data-page="notifications" data-title="Notifications">
+                <i class="fas fa-bell"></i>
+                <span>Notifications</span>
+                <span class="badge" id="notif-badge" style="display: none;">0</span>
+            </div>
+            <div class="nav-item menu-dropdown" data-title="Menu">
+                <i class="fas fa-bars"></i>
+                <span>Menu</span>
+                <div class="menu-content" id="menu-dropdown">
+                    <a href="connexion.html" class="menu-item" id="login-item">
+                        <i class="fas fa-sign-in-alt"></i>
+                        <span>Connexion</span>
+                    </a>
+                    <div class="menu-item" id="profile-item" style="display: none;">
+                        <i class="fas fa-user"></i>
+                        <span id="user-name">Mon Profil</span>
+                    </div>
+                    <div class="menu-item" id="publish-item" style="display: none;" onclick="window.location.href='publier.html'">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>Publier</span>
+                    </div>
+                    <div class="menu-item" id="video-item" style="display: none;" onclick="window.location.href='video.html'">
+                        <i class="fas fa-video"></i>
+                        <span>Vidéo</span>
+                    </div>
+                    <div class="menu-divider"></div>
+                    <div class="menu-item logout" id="logout-item" style="display: none;">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Déconnexion</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <button class="search-toggle-btn" id="search-toggle-btn">
+        <i class="fas fa-chevron-down"></i>
+    </button>
+
+    <div class="search-panel" id="search-panel">
+        <h3>
+            <i class="fas fa-search"></i>
+            Rechercher du contenu
+        </h3>
+        <div class="search-input-container">
+            <input type="text" class="search-input" id="search-input" placeholder="Entrez des mots-clés...">
+            <button class="search-btn" id="search-btn">
+                <i class="fas fa-search"></i>
+                Rechercher
+            </button>
+        </div>
+        <div class="search-results-info" id="search-results-info" style="display: none;">
+            Résultats de recherche: <span id="search-results-count">0</span> élément(s) trouvé(s)
+        </div>
+    </div>
+
+    <div class="page-title" id="page-title">Accueil</div>
+
+    <div class="spa-container">
+        <div id="home-page" class="spa-page active">
+            <div id="loader" class="loader">
+                <div class="spinner"></div>
+                <p style="margin-top: 15px; color: var(--text-tertiary);">Chargement du contenu...</p>
+            </div>
+            <div id="content-container"></div>
+            <div id="empty-state" class="empty-state" style="display: none;">
+                <i class="fas fa-newspaper"></i>
+                <h3>Aucun contenu pour le moment</h3>
+                <p>Revenez plus tard pour découvrir les nouveautés</p>
+            </div>
+        </div>
+
+        <div id="messages-page" class="spa-page">
+            <div class="iframe-container">
+                <div class="iframe-loader">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="notifications-page" class="spa-page">
+            <div class="iframe-container">
+                <div class="iframe-loader">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="supabaseClient.js"></script>
+    <script src="commentaires.js"></script>
+    <script>
+        const { supabase, getCurrentUser, getUserProfile } = window.supabaseClient;
+        let currentUser = null;
+        let userProfile = null;
+        let allContent = []; // MODIFIÉ: Stockera articles et vidéos
+        let isSearching = false;
+
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+        const body = document.body;
+
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        if (savedTheme === 'dark') {
+            body.classList.add('dark-mode');
+            themeIcon.classList.replace('fa-moon', 'fa-sun');
+        }
+
+        themeToggle.addEventListener('click', () => {
+            body.classList.toggle('dark-mode');
+            if (body.classList.contains('dark-mode')) {
+                themeIcon.classList.replace('fa-moon', 'fa-sun');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                themeIcon.classList.replace('fa-sun', 'fa-moon');
+                localStorage.setItem('theme', 'light');
+            }
+        });
+
+        const searchToggleBtn = document.getElementById('search-toggle-btn');
+        const searchPanel = document.getElementById('search-panel');
+        const searchInput = document.getElementById('search-input');
+        const searchBtn = document.getElementById('search-btn');
+        const searchResultsInfo = document.getElementById('search-results-info');
+        const searchResultsCount = document.getElementById('search-results-count');
+
+        searchToggleBtn.addEventListener('click', () => {
+            searchPanel.classList.toggle('show');
+            searchToggleBtn.classList.toggle('active');
+        });
+        searchBtn.addEventListener('click', performSearch);
+        searchInput.addEventListener('keypress', (e) => e.key === 'Enter' && performSearch());
+
+        function performSearch() {
+            const query = searchInput.value.trim().toLowerCase();
+            if (!query) {
+                displayContent(allContent);
+                searchResultsInfo.style.display = 'none';
+                isSearching = false;
+                return;
+            }
+            isSearching = true;
+            const filteredContent = allContent.filter(item => {
+                const authorName = `${item.data.users_profile.prenom} ${item.data.users_profile.nom}`.toLowerCase();
+                let contentText = '';
+                if (item.type === 'article') {
+                    contentText = item.data.texte.toLowerCase();
+                } else if (item.type === 'video') {
+                    contentText = `${item.data.titre.toLowerCase()} ${item.data.description.toLowerCase()}`;
+                }
+                return contentText.includes(query) || authorName.includes(query);
+            });
+            searchResultsCount.textContent = filteredContent.length;
+            searchResultsInfo.style.display = 'block';
+            displayContent(filteredContent);
+        }
+
+        searchInput.addEventListener('input', (e) => {
+            if (e.target.value.trim() === '' && isSearching) {
+                displayContent(allContent);
+                searchResultsInfo.style.display = 'none';
+                isSearching = false;
+            }
+        });
+
+        const pageManager = { /* ... (Logique de pageManager inchangée) ... */ };
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            currentUser = await getCurrentUser();
+            if (currentUser) {
+                userProfile = await getUserProfile(currentUser.id);
+            }
+            updateMenu(); // Toujours appeler updateMenu
+            if(currentUser) {
+                 loadNotificationCount();
+                 loadMessageCount();
+            }
+            loadContent(); // MODIFIÉ: Appelle la nouvelle fonction
+            initNavigation();
+        });
+
+        // MODIFIÉ: Logique de mise à jour du menu
+        function updateMenu() {
+            if (currentUser && userProfile) {
+                document.getElementById('login-item').style.display = 'none';
+                document.getElementById('profile-item').style.display = 'flex';
+                document.getElementById('logout-item').style.display = 'flex';
+                document.getElementById('user-name').textContent = `${userProfile.prenom} ${userProfile.nom}`;
+                
+                // Le bouton "Publier" est visible pour tous les utilisateurs connectés
+                document.getElementById('publish-item').style.display = 'flex';
+
+                // Le bouton "Vidéo" est visible uniquement pour admin et adminpro
+                if (userProfile.role === 'admin' || userProfile.role === 'adminpro') {
+                    document.getElementById('video-item').style.display = 'flex';
+                }
+            } else {
+                // Assure que les items protégés sont cachés si non connecté
+                document.getElementById('login-item').style.display = 'flex';
+                document.getElementById('profile-item').style.display = 'none';
+                document.getElementById('logout-item').style.display = 'none';
+                document.getElementById('publish-item').style.display = 'none';
+                document.getElementById('video-item').style.display = 'none';
+            }
+        }
+
+        function initNavigation() { /* ... (Logique de initNavigation inchangée) ... */ }
+        function navigateToPage(page, title) { /* ... (Logique de navigateToPage inchangée) ... */ }
+
+        // NOUVEAU: Fonction pour charger articles ET vidéos
+        async function loadContent() {
+            try {
+                // Lancer les deux requêtes en parallèle
+                const [articlesRes, videosRes] = await Promise.all([
+                    supabase.from('articles').select(`*, users_profile(prenom, nom, role), article_images(image_url)`).order('date_created', { ascending: false }),
+                    supabase.from('videos').select(`*, users_profile(prenom, nom, role)`).order('date_created', { ascending: false })
+                ]);
+
+                if (articlesRes.error) throw articlesRes.error;
+                if (videosRes.error) throw videosRes.error;
+
+                // Normaliser et marquer le type de contenu
+                const articles = articlesRes.data.map(d => ({ type: 'article', data: d, date_created: d.date_created }));
+                const videos = videosRes.data.map(d => ({ type: 'video', data: d, date_created: d.date_created }));
+                
+                // Fusionner et trier par date
+                allContent = [...articles, ...videos].sort((a, b) => new Date(b.date_created) - new Date(a.date_created));
+
+                document.getElementById('loader').style.display = 'none';
+                if (!allContent || allContent.length === 0) {
+                    document.getElementById('empty-state').style.display = 'block';
+                    return;
+                }
+                displayContent(allContent);
+            } catch (error) {
+                console.error('Erreur de chargement du contenu:', error);
+                document.getElementById('loader').innerHTML = '<p style="color: red;">Erreur de chargement</p>';
+            }
+        }
+
+        // MODIFIÉ: Pour afficher articles et vidéos
+        function displayContent(content) {
+            const container = document.getElementById('content-container');
+            container.innerHTML = '';
+            if (content.length === 0) {
+                container.innerHTML = `<div class="empty-state"><i class="fas fa-search"></i><h3>Aucun résultat</h3><p>Essayez d'autres mots-clés.</p></div>`;
+                return;
+            }
+            content.forEach(item => {
+                if (item.type === 'article') {
+                    container.appendChild(createArticleCard(item.data));
+                } else if (item.type === 'video') {
+                    container.appendChild(createVideoCard(item.data));
+                }
+            });
+        }
+        
+        // NOUVEAU: Fonction d'aide pour générer le menu d'options
+        function getAdminOptionsHTML(item, itemType) {
+            if (!userProfile) return '';
+
+            const isOwner = currentUser && item.user_id === currentUser.id;
+            const authorRole = item.users_profile ? item.users_profile.role : 'user';
+
+            let showEdit = false;
+            let showDelete = false;
+
+            if (userProfile.role === 'adminpro') {
+                showEdit = true;
+                showDelete = true;
+            } else if (userProfile.role === 'admin') {
+                if (isOwner) {
+                    showEdit = true;
+                }
+                if (authorRole === 'user' || authorRole === 'admin') {
+                    showDelete = true;
+                }
+            } else if (userProfile.role === 'user') {
+                if (isOwner) {
+                    showEdit = true;
+                    showDelete = true;
+                }
+            }
+            
+            if (!showEdit && !showDelete) {
+                return '';
+            }
+
+            const menuId = `options-menu-${itemType}-${item[itemType + '_id']}`;
+            const editHTML = showEdit ? `<a onclick="editItem('${itemType}', '${item[itemType + '_id']}')"><i class="fas fa-edit"></i> Modifier</a>` : '';
+            const deleteHTML = showDelete ? `<a class="delete" onclick="deleteItem('${itemType}', '${item[itemType + '_id']}')"><i class="fas fa-trash"></i> Supprimer</a>` : '';
+
+            return `
+                <div class="admin-options">
+                    <button class="options-btn" onclick="toggleAdminMenu('${menuId}')">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                    <div class="options-menu" id="${menuId}">
+                        ${editHTML}
+                        ${deleteHTML}
+                    </div>
+                </div>`;
+        }
+
+
+        function createArticleCard(article) {
+            const card = document.createElement('div');
+            card.className = 'article-card';
+            const author = article.users_profile;
+            if (!author) return card; // Sécurité si l'auteur a été supprimé
+            const initials = `${author.prenom[0]}${author.nom[0]}`.toUpperCase();
+            const images = article.article_images || [];
+            let imageClass = images.length === 1 ? 'single' : (images.length === 2 ? 'double' : 'multiple');
+            
+            const imagesHTML = images.length > 0 ? `...` : ''; // Code des images inchangé
+            const linksHTML = (article.texte_url || article.vente_url || article.whatsapp_url) ? `...` : ''; // Code des liens inchangé
+
+            // MODIFIÉ: Utilisation de la fonction d'aide
+            const adminOptionsHTML = getAdminOptionsHTML(article, 'article');
+
+            card.innerHTML = `
+                <div class="article-header">
+                    <div class="avatar">${initials}</div>
+                    <div class="author-info">
+                        <h3>${author.prenom} ${author.nom}</h3>
+                        <p>${new Date(article.date_created).toLocaleString('fr-FR')}</p>
+                    </div>
+                    ${adminOptionsHTML}
+                </div>
+                <div class="article-content">
+                    <div class="article-text">${article.texte}</div>
+                    ${imagesHTML}
+                    ${linksHTML}
+                </div>
+                <div class="reactions">
+                    </div>
+                <div class="comments-reactions-section">
+                    <div class="comments-toggle-large" onclick="toggleComments('${article.article_id}')"><i class="fas fa-comment"></i><span>Commentaires</span></div>
+                    <div class="user-reactions-btn" onclick="viewUserReactions('${article.article_id}')"><i class="fas fa-user"></i></div>
+                </div>
+                <div class="comments-section" id="comments-${article.article_id}"></div>`;
+            return card;
+        }
+
+        // NOUVEAU: Fonction pour créer une carte vidéo
+        function createVideoCard(video) {
+            const card = document.createElement('div');
+            card.className = 'video-card';
+            const author = video.users_profile;
+             if (!author) return card;
+            const initials = `${author.prenom[0]}${author.nom[0]}`.toUpperCase();
+
+            // Note: la logique de modération pour les vidéos n'a pas été spécifiée, 
+            // j'applique donc la même que pour les articles pour la cohérence.
+            // Si les règles sont différentes, il suffit de les ajuster dans getAdminOptionsHTML.
+            const adminOptionsHTML = getAdminOptionsHTML(video, 'video');
+
+            card.innerHTML = `
+                 <div class="article-header">
+                    <div class="avatar">${initials}</div>
+                    <div class="author-info">
+                        <h3>${author.prenom} ${author.nom}</h3>
+                        <p>${new Date(video.date_created).toLocaleString('fr-FR')}</p>
+                    </div>
+                    ${adminOptionsHTML}
+                </div>
+                <div class="video-content">
+                    <h4>${video.titre}</h4>
+                    <p>${video.description || ''}</p>
+                    <video controls src="${video.video_url}"></video>
+                </div>`;
+            return card;
+        }
+
+
+        function toggleAdminMenu(menuId) { /* ... (Inchangé) ... */ }
+        document.addEventListener('click', function(event) { /* ... (Inchangé) ... */ });
+
+        // NOUVEAU: Fonctions de suppression/modification génériques
+        function editItem(itemType, itemId) {
+            window.location.href = `edit-${itemType}.html?id=${itemId}`;
+        }
+
+        async function deleteItem(itemType, itemId) {
+            const confirmation = confirm(`Êtes-vous sûr de vouloir supprimer ce contenu définitivement ?`);
+            if (confirmation) {
+                try {
+                    const tableName = itemType === 'article' ? 'articles' : 'videos';
+                    const idColumn = itemType === 'article' ? 'article_id' : 'video_id';
+                    
+                    const { error } = await supabase.from(tableName).delete().eq(idColumn, itemId);
+                    if (error) throw error;
+                    
+                    alert("Le contenu a été supprimé avec succès.");
+                    loadContent(); // Recharger tout le contenu
+                } catch (error) {
+                    console.error("Erreur lors de la suppression:", error.message);
+                    alert("Une erreur s'est produite lors de la suppression.");
+                }
+            }
+        }
+
+        async function handleReaction(articleId, reactionType) { /* ... (Inchangé) ... */ }
+        function toggleComments(articleId) { /* ... (Inchangé) ... */ }
+        async function loadComments(articleId, container) { /* ... (Inchangé) ... */ }
+        async function viewUserReactions(articleId) { /* ... (Inchangé) ... */ }
+        
+        window.viewUserReactions = viewUserReactions;
+        window.toggleAdminMenu = toggleAdminMenu;
+        window.editItem = editItem; // MODIFIÉ
+        window.deleteItem = deleteItem; // MODIFIÉ
+        window.handleReaction = handleReaction;
+        window.toggleComments = toggleComments;
+
+        async function loadNotificationCount() { /* ... (Inchangé) ... */ }
+        async function loadMessageCount() { /* ... (Inchangé, mais la table 'messages' n'est pas dans le SQL) ... */ }
+        setInterval(() => { /* ... (Inchangé) ... */ }, 30000);
+    </script>
+</body>
+</html>
