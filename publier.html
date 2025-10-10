@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Publier un Article</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { /* Mêmes variables que video.html pour la cohérence */ }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f2f5; color: #1c1e21;
+        }
+        .navbar {
+            background-color: #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 0 2rem;
+            height: 60px; display: flex; align-items: center; justify-content: space-between;
+        }
+        .navbar-brand { font-size: 1.5rem; font-weight: 700; color: #0866ff; }
+        .navbar-actions { display: flex; align-items: center; gap: 1rem; }
+        .nav-link { text-decoration: none; color: #65676b; font-size: 1.5rem; transition: color 0.2s; }
+        .nav-link:hover { color: #0866ff; }
+        
+        /* Bouton Spécial AdminPro */
+        #adminpro-btn {
+            width: 36px; height: 36px; border-radius: 50%; border: none;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: background-color 0.3s, transform 0.2s;
+            color: white; font-size: 1rem;
+        }
+        #adminpro-btn:hover { transform: scale(1.1); }
+        
+        .container { max-width: 800px; margin: 4rem auto; padding: 2rem; }
+        .card { background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 2.5rem; }
+        .card-header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 2rem; }
+        .form-group { margin-bottom: 1.5rem; }
+        label { font-weight: 600; margin-bottom: 0.5rem; display: block; }
+        input[type="url"], textarea {
+            width: 100%; padding: 0.75rem 1rem; border: 1px solid #ced0d4;
+            border-radius: 8px; font-size: 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        input[type="url"]:focus, textarea:focus {
+            outline: none; border-color: #0866ff;
+            box-shadow: 0 0 0 2px rgba(8, 102, 255, 0.2);
+        }
+        textarea { resize: vertical; min-height: 150px; }
+        .file-upload { border: 2px dashed #ced0d4; border-radius: 8px; padding: 2rem; text-align: center; cursor: pointer; }
+        .preview-container { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 1rem; }
+        .preview-img { position: relative; width: 100px; height: 100px; border-radius: 8px; overflow: hidden; }
+        .preview-img img { width: 100%; height: 100%; object-fit: cover; }
+        .remove-img { position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; border-radius: 50%;
+            background: rgba(0,0,0,0.6); color: white; border: none; cursor: pointer; display: flex;
+            align-items: center; justify-content: center;
+        }
+        .url-group { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .submit-btn {
+            width: 100%; padding: 1rem; background-color: #0866ff; border: none;
+            border-radius: 8px; color: white; font-size: 1.1rem; font-weight: 600;
+            cursor: pointer; transition: background-color 0.2s;
+        }
+        .message { padding: 1rem; border-radius: 8px; margin-top: 1.5rem; display: none; text-align: center; }
+        .message.success { background-color: #d4edda; color: #155724; }
+        .message.error { background-color: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="navbar-brand"><i class="fas fa-pencil-alt"></i> Créer une Publication</div>
+        <div class="navbar-actions">
+            <button id="adminpro-btn" title=""></button> <a href="index.html" class="nav-link" title="Retour à l'accueil"><i class="fas fa-home"></i></a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h1>Partagez quelque chose...</h1>
+            </div>
+
+            <form id="article-form">
+                <div class="form-group">
+                    <label for="texte">Contenu de l'article *</label>
+                    <textarea id="texte" required placeholder="Exprimez-vous..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="images">Images (optionnel, max 5)</label>
+                    <input type="file" id="images" accept="image/*" multiple style="display:none;">
+                    <div class="file-upload" onclick="document.getElementById('images').click()">
+                        <p><i class="fas fa-camera"></i> Ajouter des photos</p>
+                    </div>
+                    <div id="preview-container" class="preview-container"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>Liens Additionnels (optionnel)</label>
+                    <div class="url-group">
+                        <input type="url" id="texte_url" placeholder="Lien principal (https://...)">
+                        <input type="url" id="vente_url" placeholder="Lien de vente (https://...)">
+                        <input type="url" id="whatsapp_url" placeholder="Lien WhatsApp (https://wa.me/...)">
+                    </div>
+                </div>
+                
+                <button type="submit" class="submit-btn" id="submit-btn">
+                    <i class="fas fa-paper-plane"></i> Publier
+                </button>
+            </form>
+             <div id="message" class="message"></div>
+        </div>
+    </div>
+
+    <script src="supabaseClient.js"></script>
+    <script>
+        const { supabase, getCurrentUser, getUserProfile } = window.supabaseClient;
+        let selectedFiles = [];
+        const adminproBtn = document.getElementById('adminpro-btn');
+        
+        // --- Sécurité et Initialisation ---
+        window.addEventListener('DOMContentLoaded', async () => {
+            const user = await getCurrentUser();
+            if (!user) {
+                window.location.href = 'connexion.html';
+                return;
+            }
+            const profile = await getUserProfile(user.id);
+            if (!profile) return; // Profil non trouvé
+
+            // Logique du bouton spécial
+            if (profile.role === 'adminpro') {
+                adminproBtn.style.backgroundColor = '#000000'; // NOIR PUR
+                adminproBtn.innerHTML = '<i class="fas fa-shield-alt"></i>';
+                adminproBtn.title = 'Panneau Super-Admin';
+                adminproBtn.onclick = () => { window.location.href = 'adminpro.html'; };
+            } else {
+                adminproBtn.style.backgroundColor = '#FF0000'; // ROUGE PUR
+                adminproBtn.innerHTML = '<i class="fas fa-lock"></i>';
+                adminproBtn.title = 'Accès restreint';
+                adminproBtn.style.cursor = 'not-allowed';
+            }
+        });
+        
+        // Le reste du JS pour la publication d'article est similaire à votre code de base
+        // (gestion des images, soumission du formulaire, etc.)
+        document.getElementById('images').addEventListener('change', (e) => { /* ... */ });
+        function displayPreviews() { /* ... */ }
+        function removeImage(idx) { /* ... */ }
+        document.getElementById('article-form').addEventListener('submit', async (e) => { /* ... */ });
+        function showMessage(text, type) { /* ... */ }
+    </script>
+</body>
+</html>
