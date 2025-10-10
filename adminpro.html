@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panneau Super-Admin - Notifications</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { /* Mêmes variables */ }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #1c1e21; /* Fond sombre pour un look premium */
+            color: #e4e6eb;
+        }
+        .navbar {
+            background-color: #242526; border-bottom: 1px solid #3a3b3c; padding: 0 2rem;
+            height: 60px; display: flex; align-items: center; justify-content: space-between;
+        }
+        .navbar-brand { font-size: 1.5rem; font-weight: 700; color: #e4e6eb; }
+        .navbar-brand .fa-shield-alt { color: #FFD700; } /* Icône dorée */
+        .nav-link { text-decoration: none; color: #b0b3b8; font-size: 1.5rem; transition: color 0.2s; }
+        .nav-link:hover { color: #e4e6eb; }
+        .container { max-width: 700px; margin: 4rem auto; padding: 2rem; }
+        .card { background-color: #242526; border-radius: 12px; border: 1px solid #3a3b3c; padding: 2.5rem; }
+        .card-header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 2rem; }
+        .form-group { margin-bottom: 1.5rem; }
+        label { font-weight: 600; margin-bottom: 0.5rem; display: block; color: #b0b3b8; }
+        select, textarea {
+            width: 100%; padding: 0.75rem 1rem; border: 1px solid #3a3b3c;
+            border-radius: 8px; font-size: 1rem; background-color: #3a3b3c;
+            color: #e4e6eb;
+        }
+        select:focus, textarea:focus {
+            outline: none; border-color: #FFD700;
+            box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.2);
+        }
+        textarea { resize: vertical; min-height: 120px; }
+        .submit-btn {
+            width: 100%; padding: 1rem; background-color: #FFD700; border: none;
+            border-radius: 8px; color: #1c1e21; font-size: 1.1rem; font-weight: 700;
+            cursor: pointer; transition: background-color 0.2s;
+        }
+        .submit-btn:hover { background-color: #f0c400; }
+        .message { padding: 1rem; border-radius: 8px; margin-top: 1.5rem; display: none; text-align: center; }
+        .message.success { background-color: #2e4a3b; color: #a3e9a4; }
+        .message.error { background-color: #5c2b2f; color: #f5c6cb; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="navbar-brand"><i class="fas fa-shield-alt"></i> Panneau AdminPro</div>
+        <div>
+            <a href="publier.html" class="nav-link" title="Publier un article"><i class="fas fa-pencil-alt"></i></a>
+            <a href="index.html" class="nav-link" title="Retour à l'accueil" style="margin-left: 1rem;"><i class="fas fa-home"></i></a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h1><i class="fas fa-bullhorn"></i> Envoyer une Notification</h1>
+            </div>
+
+            <form id="notification-form">
+                <div class="form-group">
+                    <label for="notif-user">Destinataire</label>
+                    <select id="notif-user">
+                        <option value="all">-- Tous les utilisateurs --</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="notif-texte">Message de la notification *</label>
+                    <textarea id="notif-texte" required placeholder="Votre message important ici..."></textarea>
+                </div>
+
+                <button type="submit" class="submit-btn" id="submit-btn">
+                    <i class="fas fa-broadcast-tower"></i> Diffuser le message
+                </button>
+            </form>
+            <div id="message" class="message"></div>
+        </div>
+    </div>
+
+    <script src="supabaseClient.js"></script>
+    <script>
+        const { supabase, getCurrentUser, getUserProfile } = window.supabaseClient;
+        
+        // --- Sécurité Maximale ---
+        window.addEventListener('DOMContentLoaded', async () => {
+            const user = await getCurrentUser();
+            if (!user) {
+                window.location.href = 'connexion.html';
+                return;
+            }
+            const profile = await getUserProfile(user.id);
+            if (!profile || profile.role !== 'adminpro') {
+                alert('ACCÈS STRICTEMENT INTERDIT.');
+                window.location.href = 'index.html';
+                return;
+            }
+            loadUsers();
+        });
+        
+        // Charger les utilisateurs dans le select
+        async function loadUsers() {
+            const { data, error } = await supabase.from('users_profile').select('user_id, prenom, nom').order('prenom');
+            if (error) {
+                showMessage(`Erreur chargement utilisateurs: ${error.message}`, 'error');
+                return;
+            }
+            const select = document.getElementById('notif-user');
+            data.forEach(u => {
+                const opt = document.createElement('option');
+                opt.value = u.user_id;
+                opt.textContent = `${u.prenom} ${u.nom}`;
+                select.appendChild(opt);
+            });
+        }
+
+        // Envoyer la notification
+        document.getElementById('notification-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const targetUserId = document.getElementById('notif-user').value;
+            const texte = document.getElementById('notif-texte').value;
+            
+            if (!confirm(`Confirmez-vous l'envoi de cette notification ? L'action est irréversible.`)) {
+                return;
+            }
+
+            const submitBtn = document.getElementById('submit-btn');
+            submitBtn.disabled = true;
+
+            try {
+                let notificationsToSend = [];
+                if (targetUserId === 'all') {
+                    const { data: allUsers, error } = await supabase.from('users_profile').select('user_id');
+                    if(error) throw error;
+                    notificationsToSend = allUsers.map(u => ({ user_id: u.user_id, texte }));
+                } else {
+                    notificationsToSend.push({ user_id: targetUserId, texte });
+                }
+                
+                const { error: insertError } = await supabase.from('notifications').insert(notificationsToSend);
+                if (insertError) throw insertError;
+                
+                showMessage('Notification(s) envoyée(s) avec succès !', 'success');
+                document.getElementById('notification-form').reset();
+
+            } catch (error) {
+                showMessage(`Erreur : ${error.message}`, 'error');
+            } finally {
+                submitBtn.disabled = false;
+            }
+        });
+
+        function showMessage(text, type) {
+            const msg = document.getElementById('message');
+            msg.textContent = text;
+            msg.className = `message ${type}`;
+            msg.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
