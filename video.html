@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nouvelle Vidéo</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #f0f2f5;
+            --card-bg: #ffffff;
+            --text-primary: #1c1e21;
+            --text-secondary: #65676b;
+            --border-color: #ced0d4;
+            --accent-color: #0866ff;
+            --accent-hover: #0652cc;
+            --danger-color: #fa383e;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+        }
+        .navbar {
+            background-color: var(--card-bg);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 0 2rem;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .navbar-brand { font-size: 1.5rem; font-weight: 700; color: var(--accent-color); }
+        .nav-link { text-decoration: none; color: var(--text-secondary); font-size: 1.5rem; transition: color 0.2s; }
+        .nav-link:hover { color: var(--accent-color); }
+        .container { max-width: 700px; margin: 4rem auto; padding: 2rem; }
+        .card { background-color: var(--card-bg); border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 2.5rem; }
+        .card-header { text-align: center; margin-bottom: 2.5rem; }
+        .card-header .icon { font-size: 3rem; color: var(--accent-color); margin-bottom: 1rem; }
+        .card-header h1 { font-size: 2rem; font-weight: 700; }
+        .form-group { margin-bottom: 1.5rem; }
+        label { font-weight: 600; margin-bottom: 0.5rem; display: block; }
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        input[type="text"]:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(8, 102, 255, 0.2);
+        }
+        textarea { resize: vertical; min-height: 100px; }
+        #video-upload-area {
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+        #video-upload-area.dragover { border-color: var(--accent-color); background-color: #f0f8ff; }
+        #video-upload-area .icon { font-size: 2.5rem; color: var(--text-secondary); margin-bottom: 1rem; }
+        #file-info { margin-top: 1rem; color: var(--text-secondary); font-weight: 500; }
+        .progress-bar { width: 100%; background-color: #e9ecef; border-radius: 8px; overflow: hidden; height: 10px; margin-top: 1rem; display: none; }
+        .progress-bar-fill { width: 0%; height: 100%; background-color: var(--accent-color); transition: width 0.3s; }
+        .submit-btn {
+            width: 100%;
+            padding: 1rem;
+            background-color: var(--accent-color);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .submit-btn:hover:not(:disabled) { background-color: var(--accent-hover); }
+        .submit-btn:disabled { background-color: #bcc0c4; cursor: not-allowed; }
+        .message { padding: 1rem; border-radius: 8px; margin-top: 1.5rem; display: none; text-align: center; }
+        .message.success { background-color: #d4edda; color: #155724; }
+        .message.error { background-color: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="navbar-brand"><i class="fas fa-video"></i> Module Vidéo</div>
+        <a href="index.html" class="nav-link" title="Retour à l'accueil"><i class="fas fa-home"></i></a>
+    </nav>
+
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <div class="icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                <h1>Importer une Nouvelle Vidéo</h1>
+            </div>
+
+            <form id="video-form">
+                <div class="form-group">
+                    <label for="titre">Titre de la vidéo *</label>
+                    <input type="text" id="titre" required placeholder="Ex: Ma nouvelle formation">
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" placeholder="Décrivez le contenu de la vidéo..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="video-file">Fichier Vidéo *</label>
+                    <input type="file" id="video-file" accept="video/*" style="display: none;" required>
+                    <div id="video-upload-area">
+                        <div class="icon"><i class="fas fa-file-video"></i></div>
+                        <p>Glissez-déposez un fichier ici ou <strong>cliquez pour sélectionner</strong></p>
+                    </div>
+                    <div id="file-info">Aucun fichier sélectionné.</div>
+                    <div class="progress-bar" id="progress-container">
+                        <div class="progress-bar-fill" id="progress-fill"></div>
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-btn" id="submit-btn" disabled>
+                    <i class="fas fa-paper-plane"></i> Publier la vidéo
+                </button>
+            </form>
+
+            <div id="message" class="message"></div>
+        </div>
+    </div>
+
+    <script src="supabaseClient.js"></script>
+    <script>
+        const { supabase, getCurrentUser, getUserProfile } = window.supabaseClient;
+        let videoFile = null;
+
+        const form = document.getElementById('video-form');
+        const submitBtn = document.getElementById('submit-btn');
+        const uploadArea = document.getElementById('video-upload-area');
+        const fileInput = document.getElementById('video-file');
+        const fileInfo = document.getElementById('file-info');
+        const progressContainer = document.getElementById('progress-container');
+        const progressFill = document.getElementById('progress-fill');
+        const messageDiv = document.getElementById('message');
+        
+        // --- Sécurité ---
+        window.addEventListener('DOMContentLoaded', async () => {
+            const user = await getCurrentUser();
+            if (!user) {
+                window.location.href = 'connexion.html';
+                return;
+            }
+            const profile = await getUserProfile(user.id);
+            if (!profile || !['admin', 'adminpro'].includes(profile.role)) {
+                alert('Accès refusé. Cette section est réservée aux administrateurs.');
+                window.location.href = 'index.html';
+            }
+        });
+
+        // --- Gestion de l'upload ---
+        uploadArea.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            }, false);
+        });
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, () => uploadArea.classList.add('dragover'), false);
+        });
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, () => uploadArea.classList.remove('dragover'), false);
+        });
+        uploadArea.addEventListener('drop', (e) => handleFile(e.dataTransfer.files[0]));
+
+        function handleFile(file) {
+            if (file && file.type.startsWith('video/')) {
+                videoFile = file;
+                fileInfo.textContent = `Fichier sélectionné : ${file.name}`;
+                submitBtn.disabled = false;
+            } else {
+                videoFile = null;
+                fileInfo.textContent = "Fichier non valide. Veuillez sélectionner une vidéo.";
+                submitBtn.disabled = true;
+            }
+        }
+
+        // --- Soumission du formulaire ---
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!videoFile) {
+                showMessage('Veuillez sélectionner un fichier vidéo.', 'error');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Publication en cours...';
+            progressContainer.style.display = 'block';
+
+            try {
+                const user = await getCurrentUser();
+                const titre = document.getElementById('titre').value;
+                const description = document.getElementById('description').value || null;
+                
+                const fileName = `public/${Date.now()}_${videoFile.name}`;
+
+                // Upload vers Supabase Storage avec suivi de progression
+                const { error: uploadError } = await supabase.storage
+                    .from('videos')
+                    .upload(fileName, videoFile, {
+                        cacheControl: '3600',
+                        upsert: false
+                    });
+
+                if (uploadError) throw uploadError;
+
+                // Obtenir l'URL publique
+                const { data: { publicUrl } } = supabase.storage
+                    .from('videos')
+                    .getPublicUrl(fileName);
+                
+                // Insérer dans la base de données
+                const { error: dbError } = await supabase
+                    .from('videos')
+                    .insert({
+                        user_id: user.id,
+                        titre,
+                        description,
+                        video_url: publicUrl
+                    });
+
+                if (dbError) throw dbError;
+
+                showMessage('Vidéo publiée avec succès !', 'success');
+                form.reset();
+                fileInfo.textContent = "Aucun fichier sélectionné.";
+                videoFile = null;
+
+            } catch (error) {
+                showMessage(`Erreur : ${error.message}`, 'error');
+            } finally {
+                submitBtn.disabled = true; // Reste désactivé jusqu'à sélection d'un nouveau fichier
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Publier la vidéo';
+                progressContainer.style.display = 'none';
+                progressFill.style.width = '0%';
+            }
+        });
+
+        function showMessage(text, type) {
+            messageDiv.textContent = text;
+            messageDiv.className = `message ${type}`;
+            messageDiv.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
