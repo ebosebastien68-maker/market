@@ -7,22 +7,41 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { /* Mêmes variables que video.html pour la cohérence */ }
+        :root {
+            --primary-color: #0866ff;
+            --background-color: #f0f2f5;
+            --card-background: #ffffff;
+            --text-primary: #1c1e21;
+            --text-secondary: #65676b;
+            --border-color: #ced0d4;
+            --success-bg: #d4edda;
+            --success-text: #155724;
+            --error-bg: #f8d7da;
+            --error-text: #721c24;
+        }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f0f2f5; color: #1c1e21;
+            background-color: var(--background-color);
+            color: var(--text-primary);
         }
         .navbar {
-            background-color: #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 0 2rem;
-            height: 60px; display: flex; align-items: center; justify-content: space-between;
+            background-color: var(--card-background);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 0 2rem;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
         }
-        .navbar-brand { font-size: 1.5rem; font-weight: 700; color: #0866ff; }
+        .navbar-brand { font-size: 1.5rem; font-weight: 700; color: var(--primary-color); }
         .navbar-actions { display: flex; align-items: center; gap: 1rem; }
-        .nav-link { text-decoration: none; color: #65676b; font-size: 1.5rem; transition: color 0.2s; }
-        .nav-link:hover { color: #0866ff; }
+        .nav-link { text-decoration: none; color: var(--text-secondary); font-size: 1.5rem; transition: color 0.2s; }
+        .nav-link:hover { color: var(--primary-color); }
         
-        /* Bouton Spécial AdminPro */
         #adminpro-btn {
             width: 36px; height: 36px; border-radius: 50%; border: none;
             display: flex; align-items: center; justify-content: center;
@@ -31,53 +50,63 @@
         }
         #adminpro-btn:hover { transform: scale(1.1); }
         
-        .container { max-width: 800px; margin: 4rem auto; padding: 2rem; }
-        .card { background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 2.5rem; }
+        .container { max-width: 800px; margin: 2rem auto; padding: 2rem; }
+        .card { background-color: var(--card-background); border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 2.5rem; }
         .card-header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 2rem; }
         .form-group { margin-bottom: 1.5rem; }
         label { font-weight: 600; margin-bottom: 0.5rem; display: block; }
         input[type="url"], textarea {
-            width: 100%; padding: 0.75rem 1rem; border: 1px solid #ced0d4;
+            width: 100%; padding: 0.75rem 1rem; border: 1px solid var(--border-color);
             border-radius: 8px; font-size: 1rem;
             transition: border-color 0.2s, box-shadow 0.2s;
         }
         input[type="url"]:focus, textarea:focus {
-            outline: none; border-color: #0866ff;
+            outline: none; border-color: var(--primary-color);
             box-shadow: 0 0 0 2px rgba(8, 102, 255, 0.2);
         }
         textarea { resize: vertical; min-height: 150px; }
-        .file-upload { border: 2px dashed #ced0d4; border-radius: 8px; padding: 2rem; text-align: center; cursor: pointer; }
+        .file-upload { border: 2px dashed var(--border-color); border-radius: 8px; padding: 2rem; text-align: center; cursor: pointer; transition: border-color 0.2s, background-color 0.2s; }
+        .file-upload:hover { border-color: var(--primary-color); background-color: #f7f8fa; }
         .preview-container { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 1rem; }
-        .preview-img { position: relative; width: 100px; height: 100px; border-radius: 8px; overflow: hidden; }
-        .preview-img img { width: 100%; height: 100%; object-fit: cover; }
-        .remove-img { position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; border-radius: 50%;
+        .preview-item { position: relative; width: 100px; height: 100px; border-radius: 8px; overflow: hidden; }
+        .preview-item img { width: 100%; height: 100%; object-fit: cover; }
+        .remove-img-btn { position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; border-radius: 50%;
             background: rgba(0,0,0,0.6); color: white; border: none; cursor: pointer; display: flex;
-            align-items: center; justify-content: center;
+            align-items: center; justify-content: center; font-size: 0.8rem;
         }
-        .url-group { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .url-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; }
         .submit-btn {
-            width: 100%; padding: 1rem; background-color: #0866ff; border: none;
+            width: 100%; padding: 1rem; background-color: var(--primary-color); border: none;
             border-radius: 8px; color: white; font-size: 1.1rem; font-weight: 600;
-            cursor: pointer; transition: background-color 0.2s;
+            cursor: pointer; transition: background-color 0.2s, opacity 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 0.5rem;
         }
+        .submit-btn:hover { background-color: #0655d4; }
+        .submit-btn:disabled { background-color: #a0bdfa; cursor: not-allowed; }
+        .spinner {
+            width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: #fff; border-radius: 50%; animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
         .message { padding: 1rem; border-radius: 8px; margin-top: 1.5rem; display: none; text-align: center; }
-        .message.success { background-color: #d4edda; color: #155724; }
-        .message.error { background-color: #f8d7da; color: #721c24; }
+        .message.success { background-color: var(--success-bg); color: var(--success-text); }
+        .message.error { background-color: var(--error-bg); color: var(--error-text); }
     </style>
 </head>
 <body>
 
     <nav class="navbar">
-        <div class="navbar-brand"><i class="fas fa-pencil-alt"></i> Créer une Publication</div>
+        <div class="navbar-brand" id="nav-title"><i class="fas fa-pencil-alt"></i> Créer une Publication</div>
         <div class="navbar-actions">
-            <button id="adminpro-btn" title=""></button> <a href="index.html" class="nav-link" title="Retour à l'accueil"><i class="fas fa-home"></i></a>
+            <button id="adminpro-btn" title=""></button> 
+            <a href="index.html" class="nav-link" title="Retour à l'accueil"><i class="fas fa-home"></i></a>
         </div>
     </nav>
 
     <div class="container">
         <div class="card">
             <div class="card-header">
-                <h1>Partagez quelque chose...</h1>
+                <h1 id="page-title">Partagez quelque chose...</h1>
             </div>
 
             <form id="article-form">
@@ -105,7 +134,8 @@
                 </div>
                 
                 <button type="submit" class="submit-btn" id="submit-btn">
-                    <i class="fas fa-paper-plane"></i> Publier
+                    <span id="btn-text"><i class="fas fa-paper-plane"></i> Publier</span>
+                    <div class="spinner" style="display: none;"></div>
                 </button>
             </form>
              <div id="message" class="message"></div>
@@ -115,40 +145,264 @@
     <script src="supabaseClient.js"></script>
     <script>
         const { supabase, getCurrentUser, getUserProfile } = window.supabaseClient;
-        let selectedFiles = [];
-        const adminproBtn = document.getElementById('adminpro-btn');
         
-        // --- Sécurité et Initialisation ---
+        // --- ÉLÉMENTS DU DOM ---
+        const form = document.getElementById('article-form');
+        const submitBtn = document.getElementById('submit-btn');
+        const btnText = document.getElementById('btn-text');
+        const spinner = submitBtn.querySelector('.spinner');
+        const messageDiv = document.getElementById('message');
+        const imagesInput = document.getElementById('images');
+        const previewContainer = document.getElementById('preview-container');
+
+        // --- ÉTAT DE L'APPLICATION ---
+        let currentUser = null;
+        let articleId = null; // Pour le mode édition
+        let newFiles = []; // Fichiers à téléverser
+        let existingImages = []; // Images déjà présentes en mode édition
+        let imagesToRemove = []; // Images à supprimer en mode édition
+
+        // =====================================================================
+        // --- INITIALISATION DE LA PAGE ---
+        // =====================================================================
         window.addEventListener('DOMContentLoaded', async () => {
-            const user = await getCurrentUser();
-            if (!user) {
-                window.location.href = 'connexion.html';
+            try {
+                // 1. Vérification de l'utilisateur
+                currentUser = await getCurrentUser();
+                if (!currentUser) {
+                    alert("Vous devez être connecté pour publier.");
+                    window.location.href = 'connexion.html';
+                    return;
+                }
+                const profile = await getUserProfile(currentUser.id);
+                setupAdminProButton(profile);
+
+                // 2. Détection du mode (Création vs Édition)
+                const params = new URLSearchParams(window.location.search);
+                articleId = params.get('id');
+
+                if (articleId) {
+                    // Mode Édition
+                    document.getElementById('nav-title').innerHTML = '<i class="fas fa-edit"></i> Modifier la Publication';
+                    document.getElementById('page-title').textContent = 'Mettez à jour votre publication...';
+                    btnText.innerHTML = '<i class="fas fa-sync-alt"></i> Mettre à jour';
+                    await loadArticleForEditing(articleId);
+                }
+                // Sinon, c'est le mode Création par défaut.
+
+            } catch (error) {
+                console.error("Erreur d'initialisation:", error);
+                showMessage("Impossible de charger la page. " + error.message, 'error');
+            }
+        });
+
+        // =====================================================================
+        // --- GESTION DES IMAGES (Prévisualisation, Ajout, Suppression) ---
+        // =====================================================================
+        imagesInput.addEventListener('change', handleImageSelection);
+
+        function handleImageSelection(e) {
+            const files = Array.from(e.target.files);
+            const totalImages = newFiles.length + existingImages.length + files.length;
+            if (totalImages > 5) {
+                alert("Vous ne pouvez pas ajouter plus de 5 images au total.");
+                imagesInput.value = ''; // Réinitialiser l'input
                 return;
             }
-            const profile = await getUserProfile(user.id);
-            if (!profile) return; // Profil non trouvé
+            newFiles.push(...files);
+            displayPreviews();
+        }
 
-            // Logique du bouton spécial
-            if (profile.role === 'adminpro') {
-                adminproBtn.style.backgroundColor = '#000000'; // NOIR PUR
+        function displayPreviews() {
+            previewContainer.innerHTML = ''; // Vider le conteneur
+            
+            // Afficher les images existantes
+            existingImages.forEach((img, index) => {
+                const item = document.createElement('div');
+                item.className = 'preview-item';
+                item.innerHTML = `
+                    <img src="${img.image_url}" alt="Image existante">
+                    <button type="button" class="remove-img-btn" onclick="removeExistingImage(${index})">&times;</button>
+                `;
+                previewContainer.appendChild(item);
+            });
+            
+            // Afficher les nouveaux fichiers
+            newFiles.forEach((file, index) => {
+                const item = document.createElement('div');
+                item.className = 'preview-item';
+                item.innerHTML = `
+                    <img src="${URL.createObjectURL(file)}" alt="Nouvelle image">
+                    <button type="button" class="remove-img-btn" onclick="removeNewFile(${index})">&times;</button>
+                `;
+                previewContainer.appendChild(item);
+            });
+        }
+
+        function removeExistingImage(index) {
+            const removed = existingImages.splice(index, 1);
+            if (removed.length > 0) {
+                imagesToRemove.push(removed[0]);
+            }
+            displayPreviews();
+        }
+
+        function removeNewFile(index) {
+            newFiles.splice(index, 1);
+            imagesInput.value = ''; // Permet de re-sélectionner le même fichier si besoin
+            displayPreviews();
+        }
+
+        // =====================================================================
+        // --- LOGIQUE DE SOUMISSION DU FORMULAIRE ---
+        // =====================================================================
+        form.addEventListener('submit', handleSubmit);
+
+        async function handleSubmit(e) {
+            e.preventDefault();
+            setLoading(true);
+
+            try {
+                // 1. Téléverser les nouvelles images
+                const newImageUrls = await uploadImages(newFiles);
+
+                // 2. Supprimer les anciennes images (en mode édition)
+                if (articleId && imagesToRemove.length > 0) {
+                    await deleteImages(imagesToRemove);
+                }
+
+                // 3. Préparer les données de l'article
+                const articleData = {
+                    texte: document.getElementById('texte').value,
+                    texte_url: document.getElementById('texte_url').value || null,
+                    vente_url: document.getElementById('vente_url').value || null,
+                    whatsapp_url: document.getElementById('whatsapp_url').value || null,
+                    user_id: currentUser.id
+                };
+
+                let upsertedArticle;
+
+                if (articleId) {
+                    // Mettre à jour l'article existant
+                    const { data, error } = await supabase.from('articles')
+                        .update(articleData).eq('article_id', articleId).select().single();
+                    if (error) throw error;
+                    upsertedArticle = data;
+
+                } else {
+                    // Créer un nouvel article
+                    const { data, error } = await supabase.from('articles')
+                        .insert(articleData).select().single();
+                    if (error) throw error;
+                    upsertedArticle = data;
+                }
+
+                // 4. Lier les nouvelles images à l'article
+                if (newImageUrls.length > 0) {
+                    const imagesToInsert = newImageUrls.map(url => ({
+                        article_id: upsertedArticle.article_id,
+                        image_url: url
+                    }));
+                    const { error: imgError } = await supabase.from('article_images').insert(imagesToInsert);
+                    if (imgError) throw imgError;
+                }
+                
+                // 5. Succès !
+                showMessage(articleId ? 'Article mis à jour avec succès !' : 'Article publié avec succès !', 'success');
+                setTimeout(() => window.location.href = 'index.html', 1500);
+
+            } catch (error) {
+                console.error('Erreur lors de la publication:', error);
+                showMessage('Une erreur est survenue: ' + error.message, 'error');
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        // =====================================================================
+        // --- FONCTIONS AUXILIAIRES ---
+        // =====================================================================
+
+        async function loadArticleForEditing(id) {
+            const { data, error } = await supabase
+                .from('articles')
+                .select(`*, article_images(*)`)
+                .eq('article_id', id)
+                .single();
+
+            if (error) throw new Error("Article non trouvé ou accès refusé.");
+
+            // Remplir le formulaire
+            document.getElementById('texte').value = data.texte || '';
+            document.getElementById('texte_url').value = data.texte_url || '';
+            document.getElementById('vente_url').value = data.vente_url || '';
+            document.getElementById('whatsapp_url').value = data.whatsapp_url || '';
+            
+            // Gérer les images
+            existingImages = data.article_images || [];
+            displayPreviews();
+        }
+
+        async function uploadImages(files) {
+            if (files.length === 0) return [];
+
+            const uploadPromises = files.map(file => {
+                const filePath = `${currentUser.id}/${Date.now()}-${file.name}`;
+                return supabase.storage.from('articles-images').upload(filePath, file);
+            });
+
+            const results = await Promise.all(uploadPromises);
+            
+            const urls = [];
+            for (const result of results) {
+                if (result.error) throw result.error;
+                const { data } = supabase.storage.from('articles-images').getPublicUrl(result.data.path);
+                urls.push(data.publicUrl);
+            }
+            return urls;
+        }
+
+        async function deleteImages(images) {
+            const paths = images.map(img => {
+                // Extraire le chemin du fichier de l'URL publique
+                const urlParts = img.image_url.split('/articles-images/');
+                return urlParts[1];
+            });
+            
+            const { error: storageError } = await supabase.storage.from('articles-images').remove(paths);
+            if (storageError) console.error("Erreur de suppression du stockage:", storageError);
+            
+            const idsToDelete = images.map(img => img.image_id);
+            const { error: dbError } = await supabase.from('article_images').delete().in('image_id', idsToDelete);
+            if (dbError) throw dbError;
+        }
+
+        function setupAdminProButton(profile) {
+            const adminproBtn = document.getElementById('adminpro-btn');
+            if (profile && profile.role === 'adminpro') {
+                adminproBtn.style.backgroundColor = '#000000';
                 adminproBtn.innerHTML = '<i class="fas fa-shield-alt"></i>';
                 adminproBtn.title = 'Panneau Super-Admin';
                 adminproBtn.onclick = () => { window.location.href = 'adminpro.html'; };
             } else {
-                adminproBtn.style.backgroundColor = '#FF0000'; // ROUGE PUR
-                adminproBtn.innerHTML = '<i class="fas fa-lock"></i>';
-                adminproBtn.title = 'Accès restreint';
-                adminproBtn.style.cursor = 'not-allowed';
+                adminproBtn.style.backgroundColor = '#dc3545';
+                adminproBtn.innerHTML = '<i class="fas fa-user-shield"></i>';
+                adminproBtn.title = 'Mon Profil';
+                adminproBtn.onclick = () => { window.location.href = 'profil.html'; };
             }
-        });
-        
-        // Le reste du JS pour la publication d'article est similaire à votre code de base
-        // (gestion des images, soumission du formulaire, etc.)
-        document.getElementById('images').addEventListener('change', (e) => { /* ... */ });
-        function displayPreviews() { /* ... */ }
-        function removeImage(idx) { /* ... */ }
-        document.getElementById('article-form').addEventListener('submit', async (e) => { /* ... */ });
-        function showMessage(text, type) { /* ... */ }
+        }
+
+        function setLoading(isLoading) {
+            submitBtn.disabled = isLoading;
+            spinner.style.display = isLoading ? 'block' : 'none';
+            btnText.style.display = isLoading ? 'none' : 'inline-flex';
+        }
+
+        function showMessage(text, type) {
+            messageDiv.textContent = text;
+            messageDiv.className = `message ${type}`;
+            messageDiv.style.display = 'block';
+        }
     </script>
 </body>
 </html>
