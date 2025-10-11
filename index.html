@@ -1161,15 +1161,18 @@
         }
 
         function initNavigation() {
-            const navItems = document.querySelectorAll('.nav-item');
+            // ----- CORRECTION ICI -----
+            // On sélectionne uniquement les .nav-item qui ont un attribut `data-page`
+            // pour ne pas inclure le bouton du menu dans la logique de navigation.
+            const navItems = document.querySelectorAll('.nav-item[data-page]');
+            
             navItems.forEach(item => {
                 item.addEventListener('click', (e) => {
                     e.preventDefault();
+                    // On peut maintenant supprimer la vérification "if (page)" car on est sûr que l'attribut existe
                     const page = item.dataset.page;
                     const title = item.dataset.title;
-                    if (page) {
-                        navigateToPage(page, title);
-                    }
+                    navigateToPage(page, title);
                 });
             });
 
@@ -1689,4 +1692,4 @@
         window.toggleComments = toggleComments;
     </script>
 </body>
-    </html>
+</html>
