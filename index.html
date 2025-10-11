@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spiritualité</title>
+    <title>Market - Ventes</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -142,16 +142,16 @@
 
         .search-toggle-btn {
             position: fixed;
-            top: var(--navbar-height); 
+            top: var(--navbar-height);
             left: 10%;
             transform: translateX(-50%);
-            background: #1c1c1c; 
+            background: #1c1c1c;
             border: none;
-            border-radius: 0 0 12px 12px; 
-            width: 60px; 
+            border-radius: 0 0 12px 12px;
+            width: 60px;
             height: 30px;
             cursor: pointer;
-            display: flex; 
+            display: flex;
             align-items: center;
             justify-content: center;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
@@ -160,12 +160,12 @@
         }
 
         .search-toggle-btn:hover {
-            background: #333; 
+            background: #333;
             transform: translateX(-50%) translateY(2px);
         }
 
         .search-toggle-btn i {
-            font-size: 16px; 
+            font-size: 16px;
             color: #ffffff;
             transition: transform 0.3s ease;
         }
@@ -409,7 +409,7 @@
             }
         }
 
-        .article-card {
+        .article-card, .video-card {
             background: var(--bg-secondary);
             border-radius: 15px;
             margin-bottom: 20px;
@@ -418,7 +418,7 @@
             transition: all 0.3s ease;
         }
 
-        .article-card:hover {
+        .article-card:hover, .video-card:hover {
             box-shadow: var(--shadow-md);
             transform: translateY(-2px);
         }
@@ -465,8 +465,27 @@
             color: var(--text-tertiary);
         }
 
-        .article-content {
+        .article-content, .video-content {
             padding: 15px;
+        }
+
+        .video-content video {
+            width: 100%;
+            border-radius: 8px;
+            background-color: #000;
+            margin-top: 10px;
+        }
+
+        .video-content h4 {
+            font-size: 18px;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .video-content p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.6;
         }
 
         .article-text {
@@ -525,6 +544,8 @@
             color: white;
             transition: all 0.3s;
             box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
+            text-decoration: none;
+            text-align: center;
         }
 
         .link-btn:hover {
@@ -656,36 +677,14 @@
             opacity: 0.5;
         }
 
-        .page-iframe {
-            width: 100%;
-            height: calc(100vh - var(--navbar-height) - 40px);
-            border: none;
-            background: var(--bg-secondary);
-            border-radius: 12px;
-        }
-
-        .iframe-loader {
-            display: none;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-
-        .iframe-container {
-            position: relative;
-            width: 100%;
-            height: calc(100vh - var(--navbar-height) - 40px);
-        }
-        
         .admin-options {
             position: relative;
             margin-left: auto;
         }
 
         .options-btn {
-            background: #ff4757;
-            border: none;
+            background: none;
+            border: 1px solid var(--border-color);
             border-radius: 50%;
             width: 28px;
             height: 28px;
@@ -693,15 +692,15 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
+            color: var(--text-secondary);
             font-size: 14px;
-            box-shadow: 0 2px 5px rgba(255, 71, 87, 0.4);
             transition: all 0.2s ease;
         }
 
         .options-btn:hover {
             transform: scale(1.1);
-            background: #e04250;
+            background: var(--border-color);
+            color: var(--text-primary);
         }
 
         .options-menu {
@@ -739,7 +738,7 @@
         }
 
         .options-menu a.delete {
-             color: #ff4757;
+            color: #ff4757;
         }
 
         .options-menu a.delete:hover {
@@ -750,7 +749,6 @@
             width: 16px;
             text-align: center;
         }
-
 
         @media (max-width: 768px) {
             :root {
@@ -858,7 +856,7 @@
                 font-size: 10px;
             }
 
-            .article-content {
+            .article-content, .video-content {
                 padding: 12px;
             }
 
@@ -911,7 +909,7 @@
 </head>
 <body>
     <nav class="navbar">
-        <div class="navbar-left">Spiritualité</div>
+        <div class="navbar-left">Market</div>
         <div class="navbar-center">
             <button class="theme-toggle" id="theme-toggle">
                 <i class="fas fa-moon" id="theme-icon"></i>
@@ -945,7 +943,7 @@
                         <span id="user-name">Mon Profil</span>
                     </div>
                     <div class="menu-item" id="publish-item" style="display: none;" onclick="window.location.href='publier.html'">
-                        <i class="fas fa-edit"></i>
+                        <i class="fas fa-plus-circle"></i>
                         <span>Publier</span>
                     </div>
                     <div class="menu-item" id="video-item" style="display: none;" onclick="window.location.href='video.html'">
@@ -969,7 +967,7 @@
     <div class="search-panel" id="search-panel">
         <h3>
             <i class="fas fa-search"></i>
-            Rechercher des articles
+            Rechercher du contenu
         </h3>
         <div class="search-input-container">
             <input type="text" class="search-input" id="search-input" placeholder="Entrez des mots-clés...">
@@ -979,7 +977,7 @@
             </button>
         </div>
         <div class="search-results-info" id="search-results-info" style="display: none;">
-            Résultats de recherche: <span id="search-results-count">0</span> article(s) trouvé(s)
+            Résultats de recherche: <span id="search-results-count">0</span> élément(s) trouvé(s)
         </div>
     </div>
 
@@ -989,13 +987,13 @@
         <div id="home-page" class="spa-page active">
             <div id="loader" class="loader">
                 <div class="spinner"></div>
-                <p style="margin-top: 15px; color: var(--text-tertiary);">Chargement des articles...</p>
+                <p style="margin-top: 15px; color: var(--text-tertiary);">Chargement du contenu...</p>
             </div>
-            <div id="articles-container"></div>
+            <div id="content-container"></div>
             <div id="empty-state" class="empty-state" style="display: none;">
                 <i class="fas fa-newspaper"></i>
-                <h3>Aucun article pour le moment</h3>
-                <p>Revenez plus tard pour découvrir du nouveau contenu</p>
+                <h3>Aucun contenu pour le moment</h3>
+                <p>Revenez plus tard pour découvrir les nouveautés</p>
             </div>
         </div>
 
@@ -1003,7 +1001,6 @@
             <div class="iframe-container">
                 <div class="iframe-loader">
                     <div class="spinner"></div>
-                    <p style="margin-top: 15px; color: var(--text-tertiary);">Chargement...</p>
                 </div>
             </div>
         </div>
@@ -1012,21 +1009,21 @@
             <div class="iframe-container">
                 <div class="iframe-loader">
                     <div class="spinner"></div>
-                    <p style="margin-top: 15px; color: var(--text-tertiary);">Chargement...</p>
                 </div>
             </div>
         </div>
     </div>
 
     <script src="supabaseClient.js"></script>
-    <script src="commentaires.js"></script>
     <script>
         const { supabase, getCurrentUser, getUserProfile } = window.supabaseClient;
         let currentUser = null;
         let userProfile = null;
-        let allArticles = [];
+        let allContent = [];
         let isSearching = false;
+        let userReactionsCache = new Map();
 
+        // Gestion du thème
         const themeToggle = document.getElementById('theme-toggle');
         const themeIcon = document.getElementById('theme-icon');
         const body = document.body;
@@ -1048,6 +1045,7 @@
             }
         });
 
+        // Gestion du panneau de recherche
         const searchToggleBtn = document.getElementById('search-toggle-btn');
         const searchPanel = document.getElementById('search-panel');
         const searchInput = document.getElementById('search-input');
@@ -1058,104 +1056,88 @@
         searchToggleBtn.addEventListener('click', () => {
             searchPanel.classList.toggle('show');
             searchToggleBtn.classList.toggle('active');
-            if (searchPanel.classList.contains('show')) {
-                searchInput.focus();
-            }
         });
 
         searchBtn.addEventListener('click', performSearch);
         searchInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                performSearch();
-            }
+            if (e.key === 'Enter') performSearch();
         });
 
-        async function performSearch() {
+        function performSearch() {
             const query = searchInput.value.trim().toLowerCase();
             if (!query) {
-                displayArticles(allArticles);
+                displayContent(allContent);
                 searchResultsInfo.style.display = 'none';
                 isSearching = false;
                 return;
             }
+            
             isSearching = true;
-            const filteredArticles = allArticles.filter(article => {
-                const text = article.texte?.toLowerCase() || '';
-                const authorName = `${article.users_profile?.prenom} ${article.users_profile?.nom}`.toLowerCase();
-                return text.includes(query) || authorName.includes(query);
+            const filteredContent = allContent.filter(item => {
+                const authorName = `${item.data.users_profile.prenom} ${item.data.users_profile.nom}`.toLowerCase();
+                let contentText = '';
+                
+                if (item.type === 'article') {
+                    contentText = (item.data.texte || '').toLowerCase();
+                } else if (item.type === 'video') {
+                    contentText = `${(item.data.titre || '').toLowerCase()} ${(item.data.description || '').toLowerCase()}`;
+                }
+                
+                return contentText.includes(query) || authorName.includes(query);
             });
-            searchResultsCount.textContent = filteredArticles.length;
+            
+            searchResultsCount.textContent = filteredContent.length;
             searchResultsInfo.style.display = 'block';
-            displayArticles(filteredArticles);
-            setTimeout(() => {
-                searchPanel.classList.remove('show');
-                searchToggleBtn.classList.remove('active');
-            }, 500);
+            displayContent(filteredContent);
         }
 
         searchInput.addEventListener('input', (e) => {
             if (e.target.value.trim() === '' && isSearching) {
-                displayArticles(allArticles);
+                displayContent(allContent);
                 searchResultsInfo.style.display = 'none';
                 isSearching = false;
             }
         });
 
-        const pageManager = {
-            loadedPages: new Set(['home']),
-            iframes: {},
-            async loadPage(pageName) {
-                if (this.loadedPages.has(pageName)) return;
-                const pageContainer = document.getElementById(`${pageName}-page`);
-                const iframeContainer = pageContainer.querySelector('.iframe-container');
-                if (!iframeContainer) return;
-                const loader = iframeContainer.querySelector('.iframe-loader');
-                if (loader) loader.style.display = 'block';
-                const iframe = document.createElement('iframe');
-                iframe.className = 'page-iframe';
-                iframe.src = `${pageName}.html`;
-                iframe.style.opacity = '0';
-                iframe.style.transition = 'opacity 0.3s';
-                iframe.onload = () => {
-                    if (loader) loader.style.display = 'none';
-                    iframe.style.opacity = '1';
-                    this.loadedPages.add(pageName);
-                };
-                iframe.onerror = () => {
-                    if (loader) loader.innerHTML = '<p style="color: #ff4757;">Erreur de chargement</p>';
-                };
-                iframeContainer.appendChild(iframe);
-                this.iframes[pageName] = iframe;
-            },
-            preloadPage(pageName) {
-                if (!this.loadedPages.has(pageName)) {
-                    this.loadPage(pageName);
-                }
-            }
-        };
+        // Gestion du menu dropdown
+        const menuDropdown = document.querySelector('.menu-dropdown');
+        const menuContent = document.getElementById('menu-dropdown');
 
-        // CORRECTION : Encadrement de toute la logique de démarrage dans un try...catch
-        window.addEventListener('DOMContentLoaded', async () => {
-            try {
-                currentUser = await getCurrentUser();
-                if (currentUser) {
-                    userProfile = await getUserProfile(currentUser.id);
-                }
-                
-                updateMenu();
-                
-                if (currentUser) {
-                    await Promise.all([loadNotificationCount(), loadMessageCount()]);
-                }
-                
-                await loadArticles();
-                
-                initNavigation(); // C'est ici que les boutons deviennent cliquables
-            } catch (error) {
-                console.error("Erreur critique au démarrage :", error);
-                const loader = document.getElementById('loader');
-                if(loader) loader.innerHTML = '<p style="color: red; text-align: center;">Impossible de charger l\'application. Veuillez vérifier votre connexion et réessayer.</p>';
+        menuDropdown.addEventListener('click', (e) => {
+            e.stopPropagation();
+            menuContent.classList.toggle('show');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!menuDropdown.contains(e.target)) {
+                menuContent.classList.remove('show');
             }
+            
+            const allOptionsMenus = document.querySelectorAll('.options-menu');
+            allOptionsMenus.forEach(menu => {
+                if (!menu.parentElement.contains(e.target)) {
+                    menu.classList.remove('show');
+                }
+            });
+        });
+
+        // Initialisation au chargement
+        window.addEventListener('DOMContentLoaded', async () => {
+            currentUser = await getCurrentUser();
+            if (currentUser) {
+                userProfile = await getUserProfile(currentUser.id);
+                await loadUserReactions();
+            }
+            
+            updateMenu();
+            
+            if (currentUser) {
+                loadNotificationCount();
+                loadMessageCount();
+            }
+            
+            loadContent();
+            initNavigation();
         });
 
         function updateMenu() {
@@ -1164,9 +1146,8 @@
                 document.getElementById('profile-item').style.display = 'flex';
                 document.getElementById('logout-item').style.display = 'flex';
                 document.getElementById('user-name').textContent = `${userProfile.prenom} ${userProfile.nom}`;
-                
                 document.getElementById('publish-item').style.display = 'flex';
-
+                
                 if (userProfile.role === 'admin' || userProfile.role === 'adminpro') {
                     document.getElementById('video-item').style.display = 'flex';
                 }
@@ -1179,181 +1160,203 @@
             }
         }
 
-        // CORRECTION : Logique de navigation améliorée pour le menu
         function initNavigation() {
-            const pageTitle = document.getElementById('page-title');
-            let activePageTitle = 'Accueil'; 
-
-            document.querySelectorAll('.nav-item[data-page]').forEach(item => {
-                item.addEventListener('click', function(e) {
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => {
+                item.addEventListener('click', (e) => {
                     e.preventDefault();
-                    const page = this.getAttribute('data-page');
-                    const title = this.getAttribute('data-title');
-                    activePageTitle = title;
-                    document.querySelector('.menu-dropdown').classList.remove('active');
-                    navigateToPage(page, title);
+                    const page = item.dataset.page;
+                    const title = item.dataset.title;
+                    if (page) {
+                        navigateToPage(page, title);
+                    }
                 });
             });
-            
-            document.querySelector('.menu-dropdown').addEventListener('click', function(e) {
-                e.stopPropagation();
-                const menu = document.getElementById('menu-dropdown');
-                menu.classList.toggle('show');
 
-                if (menu.classList.contains('show')) {
-                    document.querySelectorAll('.nav-item[data-page].active').forEach(n => n.classList.remove('active'));
-                    e.currentTarget.classList.add('active');
-                    pageTitle.textContent = 'Menu';
-                } else {
-                    e.currentTarget.classList.remove('active');
-                    pageTitle.textContent = activePageTitle;
-                    document.querySelector(`.nav-item[data-title="${activePageTitle}"]`)?.classList.add('active');
-                }
-            });
-
-            document.addEventListener('click', function(e) {
-                const menu = document.getElementById('menu-dropdown');
-                if (menu.classList.contains('show') && !e.target.closest('.menu-dropdown')) {
-                    menu.classList.remove('show');
-                    document.querySelector('.menu-dropdown').classList.remove('active');
-                    pageTitle.textContent = activePageTitle;
-                    document.querySelector(`.nav-item[data-title="${activePageTitle}"]`)?.classList.add('active');
-                }
-            });
-
-            document.getElementById('logout-item').addEventListener('click', async function() {
+            document.getElementById('logout-item').addEventListener('click', async () => {
                 await supabase.auth.signOut();
-                window.location.reload();
+                window.location.href = 'connexion.html';
             });
         }
 
         function navigateToPage(page, title) {
-            const pageTitle = document.getElementById('page-title');
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            document.querySelector(`[data-page="${page}"]`).classList.add('active');
+            
             document.querySelectorAll('.spa-page').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.nav-item[data-page]').forEach(n => n.classList.remove('active'));
+            document.getElementById(`${page}-page`).classList.add('active');
             
-            const pageElement = document.getElementById(`${page}-page`);
-            const navElement = document.querySelector(`[data-page="${page}"]`);
-            
-            if(pageElement) pageElement.classList.add('active');
-            if(navElement) navElement.classList.add('active');
-            
-            pageTitle.textContent = title;
+            document.getElementById('page-title').textContent = title;
+        }
 
-            searchToggleBtn.style.display = (page === 'home') ? 'flex' : 'none';
-            if (page !== 'home') {
-                searchPanel.classList.remove('show');
-                searchToggleBtn.classList.remove('active');
-            }
+        async function loadUserReactions() {
+            if (!currentUser) return;
+            
+            try {
+                const { data, error } = await supabase
+                    .from('article_reactions')
+                    .select('article_id, reaction_type')
+                    .eq('user_id', currentUser.id);
 
-            if (page !== 'home') {
-                pageManager.loadPage(page);
+                if (error) throw error;
+
+                userReactionsCache.clear();
+                data.forEach(reaction => {
+                    userReactionsCache.set(reaction.article_id, reaction.reaction_type);
+                });
+            } catch (error) {
+                console.error('Erreur chargement réactions utilisateur:', error);
             }
         }
 
-        async function loadArticles() {
+        async function loadContent() {
             try {
-                const { data: articles, error } = await supabase
-                    .from('articles')
-                    .select(`*, user_id, users_profile(prenom, nom, role), article_images(image_url)`)
-                    .order('date_created', { ascending: false });
+                const [articlesRes, videosRes] = await Promise.all([
+                    supabase
+                        .from('articles')
+                        .select('*, users_profile(prenom, nom, role), article_images(image_url)')
+                        .order('date_created', { ascending: false }),
+                    supabase
+                        .from('videos')
+                        .select('*, users_profile(prenom, nom, role)')
+                        .order('date_created', { ascending: false })
+                ]);
 
-                if (error) throw error;
+                if (articlesRes.error) throw articlesRes.error;
+                if (videosRes.error) throw videosRes.error;
+
+                const articles = articlesRes.data.map(d => ({ 
+                    type: 'article', 
+                    data: d, 
+                    date_created: d.date_created 
+                }));
+                
+                const videos = videosRes.data.map(d => ({ 
+                    type: 'video', 
+                    data: d, 
+                    date_created: d.date_created 
+                }));
+                
+                allContent = [...articles, ...videos].sort((a, b) => 
+                    new Date(b.date_created) - new Date(a.date_created)
+                );
+
                 document.getElementById('loader').style.display = 'none';
-                if (!articles || articles.length === 0) {
+                
+                if (!allContent || allContent.length === 0) {
                     document.getElementById('empty-state').style.display = 'block';
                     return;
                 }
-                allArticles = articles;
-                displayArticles(articles);
+                
+                displayContent(allContent);
             } catch (error) {
-                console.error('Erreur de chargement des articles:', error);
-                document.getElementById('loader').innerHTML = '<p style="color: red;">Erreur de chargement des articles</p>';
+                console.error('Erreur de chargement du contenu:', error);
+                document.getElementById('loader').innerHTML = '<p style="color: red;">Erreur de chargement. Veuillez rafraîchir la page.</p>';
             }
         }
 
-        function displayArticles(articles) {
-            const container = document.getElementById('articles-container');
+        function displayContent(content) {
+            const container = document.getElementById('content-container');
             container.innerHTML = '';
-            if (articles.length === 0 && isSearching) {
+            
+            if (content.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
                         <i class="fas fa-search"></i>
-                        <h3>Aucun article trouvé</h3>
-                        <p>Essayez avec d'autres mots-clés</p>
+                        <h3>Aucun résultat</h3>
+                        <p>Essayez d'autres mots-clés.</p>
                     </div>`;
                 return;
             }
-            articles.forEach(article => {
-                container.appendChild(createArticleCard(article));
+            
+            content.forEach(item => {
+                if (item.type === 'article') {
+                    container.appendChild(createArticleCard(item.data));
+                } else if (item.type === 'video') {
+                    container.appendChild(createVideoCard(item.data));
+                }
             });
+        }
+
+        function getAdminOptionsHTML(item, itemType) {
+            if (!userProfile) return '';
+
+            const isOwner = currentUser && item.user_id === currentUser.id;
+            const authorRole = item.users_profile ? item.users_profile.role : 'user';
+
+            let showEdit = false;
+            let showDelete = false;
+
+            if (userProfile.role === 'adminpro') {
+                showEdit = true;
+                showDelete = true;
+            } else if (userProfile.role === 'admin') {
+                if (isOwner) {
+                    showEdit = true;
+                }
+                if (authorRole === 'user' || authorRole === 'admin') {
+                    showDelete = true;
+                }
+            } else if (userProfile.role === 'user') {
+                if (isOwner) {
+                    showEdit = true;
+                    showDelete = true;
+                }
+            }
+            
+            if (!showEdit && !showDelete) {
+                return '';
+            }
+
+            const menuId = `options-menu-${itemType}-${item[itemType + '_id']}`;
+            const editHTML = showEdit ? `<a onclick="editItem('${itemType}', '${item[itemType + '_id']}')"><i class="fas fa-edit"></i> Modifier</a>` : '';
+            const deleteHTML = showDelete ? `<a class="delete" onclick="deleteItem('${itemType}', '${item[itemType + '_id']}')"><i class="fas fa-trash"></i> Supprimer</a>` : '';
+
+            return `
+                <div class="admin-options">
+                    <button class="options-btn" onclick="toggleAdminMenu(event, '${menuId}')">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                    <div class="options-menu" id="${menuId}">
+                        ${editHTML}
+                        ${deleteHTML}
+                    </div>
+                </div>`;
         }
 
         function createArticleCard(article) {
             const card = document.createElement('div');
             card.className = 'article-card';
+            
             const author = article.users_profile;
-
-            if (!author) { 
-                return document.createDocumentFragment(); 
-            }
-
-            const initials = `${author.prenom?.[0] || ''}${author.nom?.[0] || ''}`.toUpperCase();
+            if (!author) return card;
+            
+            const initials = `${author.prenom[0]}${author.nom[0]}`.toUpperCase();
             const images = article.article_images || [];
-            let imageClass = images.length === 1 ? 'single' : (images.length === 2 ? 'double' : (images.length > 2 ? 'multiple' : ''));
+            let imageClass = images.length === 1 ? 'single' : (images.length === 2 ? 'double' : 'multiple');
+            
             const imagesHTML = images.length > 0 ? `
                 <div class="article-images ${imageClass}">
-                    ${images.map(img => `<img src="${img.image_url}" alt="Image">`).join('')}
+                    ${images.map(img => `<img src="${img.image_url}" alt="Image" onclick="window.open('${img.image_url}', '_blank')">`).join('')}
                 </div>` : '';
+            
             const linksHTML = (article.texte_url || article.vente_url || article.whatsapp_url) ? `
                 <div class="article-links">
-                    ${article.texte_url ? `<button class="link-btn" onclick="window.open('${article.texte_url}', '_blank')"><i class="fas fa-link"></i> Lien</button>` : ''}
-                    ${article.vente_url ? `<button class="link-btn" onclick="window.open('${article.vente_url}', '_blank')"><i class="fas fa-shopping-cart"></i> Acheter</button>` : ''}
-                    ${article.whatsapp_url ? `<button class="link-btn" onclick="window.open('${article.whatsapp_url}', '_blank')"><i class="fab fa-whatsapp"></i> WhatsApp</button>` : ''}
+                    ${article.texte_url ? `<a href="${article.texte_url}" class="link-btn" target="_blank"><i class="fas fa-link"></i> Lien</a>` : ''}
+                    ${article.vente_url ? `<a href="${article.vente_url}" class="link-btn" target="_blank"><i class="fas fa-shopping-cart"></i> Acheter</a>` : ''}
+                    ${article.whatsapp_url ? `<a href="${article.whatsapp_url}" class="link-btn" target="_blank"><i class="fab fa-whatsapp"></i> WhatsApp</a>` : ''}
                 </div>` : '';
 
-            let adminOptionsHTML = '';
-            if (currentUser && userProfile && article.users_profile) {
-                const myRole = userProfile.role;
-                const isOwner = currentUser.id === article.user_id;
-                const authorRole = article.users_profile.role;
-
-                let canEdit = false;
-                let canDelete = false;
-                
-                if (myRole === 'adminpro') {
-                    canEdit = true;
-                    canDelete = true;
-                } else if (myRole === 'admin') {
-                    if (isOwner) canEdit = true;
-                    if (authorRole === 'user' || authorRole === 'admin') canDelete = true;
-                } else if (myRole === 'user' && isOwner) {
-                    canEdit = true;
-                    canDelete = true;
-                }
-
-                if (canEdit || canDelete) {
-                    adminOptionsHTML = `
-                        <div class="admin-options">
-                            <button class="options-btn" onclick="toggleAdminMenu('options-menu-${article.article_id}', event)">
-                                <i class="fas fa-ellipsis-v"></i>
-                            </button>
-                            <div class="options-menu" id="options-menu-${article.article_id}">
-                                ${canEdit ? `<a onclick="editArticle('${article.article_id}')"><i class="fas fa-edit"></i> Modifier</a>` : ''}
-                                ${canDelete ? `<a class="delete" onclick="deleteArticle('${article.article_id}')"><i class="fas fa-trash"></i> Supprimer</a>` : ''}
-                            </div>
-                        </div>`;
-                }
-            }
+            const adminOptionsHTML = getAdminOptionsHTML(article, 'article');
+            
+            const userReaction = userReactionsCache.get(article.article_id);
 
             card.innerHTML = `
                 <div class="article-header">
                     <div class="avatar">${initials}</div>
                     <div class="author-info">
                         <h3>${author.prenom} ${author.nom}</h3>
-                        <p>${new Date(article.date_created).toLocaleDateString('fr-FR', { 
-                            day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' 
-                        })}</p>
+                        <p>${new Date(article.date_created).toLocaleString('fr-FR')}</p>
                     </div>
                     ${adminOptionsHTML}
                 </div>
@@ -1363,87 +1366,195 @@
                     ${linksHTML}
                 </div>
                 <div class="reactions">
-                    <button class="reaction-btn" onclick="handleReaction('${article.article_id}', 'like')"><i class="fas fa-thumbs-up"></i><span>${article.reaction_like || 0}</span></button>
-                    <button class="reaction-btn" onclick="handleReaction('${article.article_id}', 'love')"><i class="fas fa-heart"></i><span>${article.reaction_love || 0}</span></button>
-                    <button class="reaction-btn" onclick="handleReaction('${article.article_id}', 'rire')"><i class="fas fa-laugh"></i><span>${article.reaction_rire || 0}</span></button>
-                    <button class="reaction-btn" onclick="handleReaction('${article.article_id}', 'colere')"><i class="fas fa-angry"></i><span>${article.reaction_colere || 0}</span></button>
+                    <button class="reaction-btn ${userReaction === 'like' ? 'active' : ''}" onclick="handleReaction('${article.article_id}', 'like')">
+                        <i class="fas fa-thumbs-up"></i>
+                        <span>${article.reaction_like || 0}</span>
+                    </button>
+                    <button class="reaction-btn ${userReaction === 'love' ? 'active' : ''}" onclick="handleReaction('${article.article_id}', 'love')">
+                        <i class="fas fa-heart"></i>
+                        <span>${article.reaction_love || 0}</span>
+                    </button>
+                    <button class="reaction-btn ${userReaction === 'rire' ? 'active' : ''}" onclick="handleReaction('${article.article_id}', 'rire')">
+                        <i class="fas fa-laugh"></i>
+                        <span>${article.reaction_rire || 0}</span>
+                    </button>
+                    <button class="reaction-btn ${userReaction === 'colere' ? 'active' : ''}" onclick="handleReaction('${article.article_id}', 'colere')">
+                        <i class="fas fa-angry"></i>
+                        <span>${article.reaction_colere || 0}</span>
+                    </button>
                 </div>
                 <div class="comments-reactions-section">
-                    <div class="comments-toggle-large" onclick="toggleComments('${article.article_id}')"><i class="fas fa-comment"></i><span>Commentaires</span></div>
-                    <div class="user-reactions-btn" onclick="viewUserReactions('${article.article_id}')"><i class="fas fa-user"></i></div>
+                    <div class="comments-toggle-large" onclick="toggleComments('${article.article_id}')">
+                        <i class="fas fa-comment"></i>
+                        <span>Commentaires</span>
+                    </div>
+                    <div class="user-reactions-btn" onclick="viewUserReactions('${article.article_id}')">
+                        <i class="fas fa-users"></i>
+                    </div>
                 </div>
                 <div class="comments-section" id="comments-${article.article_id}"></div>`;
+            
             return card;
         }
 
-        function toggleAdminMenu(menuId, event) {
+        function createVideoCard(video) {
+            const card = document.createElement('div');
+            card.className = 'video-card';
+            
+            const author = video.users_profile;
+            if (!author) return card;
+            
+            const initials = `${author.prenom[0]}${author.nom[0]}`.toUpperCase();
+            const adminOptionsHTML = getAdminOptionsHTML(video, 'video');
+
+            card.innerHTML = `
+                <div class="article-header">
+                    <div class="avatar">${initials}</div>
+                    <div class="author-info">
+                        <h3>${author.prenom} ${author.nom}</h3>
+                        <p>${new Date(video.date_created).toLocaleString('fr-FR')}</p>
+                    </div>
+                    ${adminOptionsHTML}
+                </div>
+                <div class="video-content">
+                    <h4>${video.titre}</h4>
+                    <p>${video.description || ''}</p>
+                    <video controls>
+                        <source src="${video.video_url}" type="video/mp4">
+                        Votre navigateur ne supporte pas la lecture de vidéos.
+                    </video>
+                </div>`;
+            
+            return card;
+        }
+
+        function toggleAdminMenu(event, menuId) {
             event.stopPropagation();
-            const targetMenu = document.getElementById(menuId);
-            const isVisible = targetMenu.classList.contains('show');
-            document.querySelectorAll('.options-menu.show').forEach(menu => menu.classList.remove('show'));
-            if (!isVisible) {
-                targetMenu.classList.add('show');
+            const menu = document.getElementById(menuId);
+            if (menu) {
+                document.querySelectorAll('.options-menu').forEach(m => {
+                    if (m.id !== menuId) m.classList.remove('show');
+                });
+                menu.classList.toggle('show');
             }
         }
 
-        document.addEventListener('click', function() {
-            document.querySelectorAll('.options-menu.show').forEach(menu => menu.classList.remove('show'));
-        });
-
-        function editArticle(articleId) {
-            window.location.href = `publier.html?id=${articleId}`;
+        function editItem(itemType, itemId) {
+            window.location.href = `edit-${itemType}.html?id=${itemId}`;
         }
 
-        async function deleteArticle(articleId) {
-            if (confirm("Êtes-vous sûr de vouloir supprimer cet article définitivement ?")) {
-                try {
-                    const { error } = await supabase.from('articles').delete().eq('article_id', articleId);
-                    if (error) throw error;
-                    alert("L'article a été supprimé.");
-                    loadArticles();
-                } catch (error) {
-                    console.error("Erreur de suppression:", error);
-                    alert("Une erreur s'est produite lors de la suppression.");
-                }
+        async function deleteItem(itemType, itemId) {
+            const confirmation = confirm('Êtes-vous sûr de vouloir supprimer ce contenu définitivement ?');
+            if (!confirmation) return;
+            
+            try {
+                const tableName = itemType === 'article' ? 'articles' : 'videos';
+                const idColumn = itemType === 'article' ? 'article_id' : 'video_id';
+                
+                const { error } = await supabase
+                    .from(tableName)
+                    .delete()
+                    .eq(idColumn, itemId);
+                
+                if (error) throw error;
+                
+                alert('Le contenu a été supprimé avec succès.');
+                await loadContent();
+            } catch (error) {
+                console.error('Erreur lors de la suppression:', error);
+                alert('Erreur: ' + error.message);
             }
         }
 
-        // CORRECTION : Logique de réaction qui permet de retirer sa réaction
         async function handleReaction(articleId, reactionType) {
             if (!currentUser) {
-                alert('Connectez-vous pour réagir.');
-                window.location.href = 'connexion.html';
+                alert('Vous devez être connecté pour réagir.');
                 return;
             }
+
             try {
-                const { data: existing, error } = await supabase
+                const currentReaction = userReactionsCache.get(articleId);
+                
+                if (currentReaction === reactionType) {
+                    const { error: deleteError } = await supabase
+                        .from('article_reactions')
+                        .delete()
+                        .eq('article_id', articleId)
+                        .eq('user_id', currentUser.id);
+
+                    if (deleteError) throw deleteError;
+                    
+                    userReactionsCache.delete(articleId);
+                } else if (currentReaction) {
+                    const { error: updateError } = await supabase
+                        .from('article_reactions')
+                        .update({ reaction_type: reactionType })
+                        .eq('article_id', articleId)
+                        .eq('user_id', currentUser.id);
+
+                    if (updateError) throw updateError;
+                    
+                    userReactionsCache.set(articleId, reactionType);
+                } else {
+                    const { error: insertError } = await supabase
+                        .from('article_reactions')
+                        .insert({
+                            article_id: articleId,
+                            user_id: currentUser.id,
+                            reaction_type: reactionType
+                        });
+
+                    if (insertError) throw insertError;
+                    
+                    userReactionsCache.set(articleId, reactionType);
+                }
+
+                await recalculateReactions(articleId);
+                await loadContent();
+            } catch (error) {
+                console.error('Erreur lors de la réaction:', error);
+                alert('Erreur: ' + error.message);
+            }
+        }
+
+        async function recalculateReactions(articleId) {
+            try {
+                const { data, error } = await supabase
                     .from('article_reactions')
-                    .select('reaction_id, reaction_type')
-                    .eq('article_id', articleId)
-                    .eq('user_id', currentUser.id)
-                    .maybeSingle();
+                    .select('reaction_type')
+                    .eq('article_id', articleId);
 
                 if (error) throw error;
 
-                if (existing) {
-                    await supabase.from('article_reactions').delete().eq('reaction_id', existing.reaction_id);
-                    if (existing.reaction_type !== reactionType) {
-                        await supabase.from('article_reactions').insert({ article_id: articleId, user_id: currentUser.id, reaction_type: reactionType });
-                    }
-                } else {
-                    await supabase.from('article_reactions').insert({ article_id: articleId, user_id: currentUser.id, reaction_type: reactionType });
-                }
-                loadArticles();
+                const counts = {
+                    reaction_like: 0,
+                    reaction_love: 0,
+                    reaction_rire: 0,
+                    reaction_colere: 0
+                };
+
+                data.forEach(r => {
+                    counts[`reaction_${r.reaction_type}`]++;
+                });
+
+                const { error: updateError } = await supabase
+                    .from('articles')
+                    .update(counts)
+                    .eq('article_id', articleId);
+
+                if (updateError) throw updateError;
             } catch (error) {
-                console.error('Erreur de réaction:', error.message);
+                console.error('Erreur recalcul réactions:', error);
             }
         }
 
         function toggleComments(articleId) {
             const section = document.getElementById(`comments-${articleId}`);
-            if (section) {
-                section.classList.toggle('show');
-                if (section.classList.contains('show') && section.innerHTML.trim() === '') {
+            if (section.classList.contains('show')) {
+                section.classList.remove('show');
+            } else {
+                section.classList.add('show');
+                if (section.innerHTML === '') {
                     loadComments(articleId, section);
                 }
             }
@@ -1451,63 +1562,115 @@
 
         async function loadComments(articleId, container) {
             container.innerHTML = '<div class="loader"><div class="spinner"></div></div>';
+            
             try {
-                const { data: comments, error } = await supabase.from('sessions_commentaires').select(`*, users_profile(prenom, nom)`).eq('article_id', articleId).order('date_created', { ascending: false });
+                const { data, error } = await supabase
+                    .from('sessions_commentaires')
+                    .select('*, users_profile(prenom, nom)')
+                    .eq('article_id', articleId)
+                    .order('date_created', { ascending: false });
+
                 if (error) throw error;
-                if (window.CommentsWidget) {
-                    window.CommentsWidget.render(container, articleId, comments, currentUser, userProfile);
+
+                if (data.length === 0) {
+                    container.innerHTML = '<p style="text-align: center; color: var(--text-tertiary); padding: 20px;">Aucun commentaire</p>';
                 } else {
-                     container.innerHTML = '<p>Le module de commentaires n\'a pu être chargé.</p>';
+                    container.innerHTML = data.map(comment => `
+                        <div style="padding: 10px; border-bottom: 1px solid var(--border-color);">
+                            <strong>${comment.users_profile.prenom} ${comment.users_profile.nom}</strong>
+                            <p style="margin: 5px 0;">${comment.texte}</p>
+                            <small style="color: var(--text-tertiary);">${new Date(comment.date_created).toLocaleString('fr-FR')}</small>
+                        </div>
+                    `).join('');
                 }
             } catch (error) {
                 console.error('Erreur chargement commentaires:', error);
-                container.innerHTML = '<p style="color: red; padding: 20px;">Erreur de chargement des commentaires</p>';
+                container.innerHTML = '<p style="color: red; text-align: center;">Erreur de chargement</p>';
             }
         }
 
-        function viewUserReactions(articleId) {
-            window.location.href = `usereact.html?article_id=${articleId}`;
+        async function viewUserReactions(articleId) {
+            if (!currentUser) {
+                alert('Connectez-vous pour voir les réactions');
+                return;
+            }
+            
+            try {
+                const { data, error } = await supabase
+                    .from('article_reactions')
+                    .select('reaction_type, users_profile(prenom, nom)')
+                    .eq('article_id', articleId);
+
+                if (error) throw error;
+
+                if (data.length === 0) {
+                    alert('Aucune réaction pour cet article');
+                    return;
+                }
+
+                const reactionIcons = {
+                    like: '👍',
+                    love: '❤️',
+                    rire: '😂',
+                    colere: '😠'
+                };
+
+                const message = data.map(r => 
+                    `${reactionIcons[r.reaction_type]} ${r.users_profile.prenom} ${r.users_profile.nom}`
+                ).join('\n');
+
+                alert('Réactions:\n\n' + message);
+            } catch (error) {
+                console.error('Erreur chargement réactions:', error);
+                alert('Erreur lors du chargement des réactions');
+            }
         }
-        
-        window.viewUserReactions = viewUserReactions;
-        window.toggleAdminMenu = toggleAdminMenu;
-        window.editArticle = editArticle;
-        window.deleteArticle = deleteArticle;
-        window.handleReaction = handleReaction;
-        window.toggleComments = toggleComments;
 
         async function loadNotificationCount() {
-            if (!currentUser) return;
             try {
-                const { count, error } = await supabase.from('notifications').select('*', { count: 'exact', head: true }).eq('user_id', currentUser.id).eq('read_status', false);
+                const { data, error } = await supabase
+                    .from('notifications')
+                    .select('notification_id', { count: 'exact' })
+                    .eq('user_id', currentUser.id)
+                    .eq('read_status', false);
+
                 if (error) throw error;
+
+                const count = data.length;
                 const badge = document.getElementById('notif-badge');
+                
                 if (count > 0) {
-                    badge.textContent = count > 9 ? '9+' : count;
+                    badge.textContent = count;
                     badge.style.display = 'block';
                 } else {
                     badge.style.display = 'none';
                 }
             } catch (error) {
-                console.error('Erreur chargement notifications:', error.message);
+                console.error('Erreur chargement notifications:', error);
             }
         }
 
         async function loadMessageCount() {
-            if (!currentUser) return;
             try {
-                // NOTE: Assurez-vous que la table 'messages' et la colonne 'receiver_id' existent.
-                const { count, error } = await supabase.from('messages').select('*', { count: 'exact', head: true }).eq('receiver_id', currentUser.id).eq('read_status', false);
-                if (error && error.code !== '42P01') throw error; // Ignore table not found error
+                const { data, error } = await supabase
+                    .from('messages')
+                    .select('message_id', { count: 'exact' })
+                    .eq('receiver_id', currentUser.id)
+                    .eq('read_status', false);
+
+                if (error) throw error;
+
+                const count = data.length;
                 const badge = document.getElementById('message-badge');
+                
                 if (count > 0) {
-                    badge.textContent = count > 9 ? '9+' : count;
+                    badge.textContent = count;
                     badge.style.display = 'block';
                 } else {
                     badge.style.display = 'none';
                 }
             } catch (error) {
-                console.error('Erreur chargement messages:', error.message);
+                console.error('Erreur chargement messages:', error);
             }
         }
 
@@ -1516,7 +1679,14 @@
                 loadNotificationCount();
                 loadMessageCount();
             }
-        }, 60000); // 60 secondes
+        }, 30000);
+
+        window.viewUserReactions = viewUserReactions;
+        window.toggleAdminMenu = toggleAdminMenu;
+        window.editItem = editItem;
+        window.deleteItem = deleteItem;
+        window.handleReaction = handleReaction;
+        window.toggleComments = toggleComments;
     </script>
 </body>
-</html>
+    </html>
