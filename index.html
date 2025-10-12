@@ -1622,6 +1622,9 @@
                 const articles = articlesResult.data || [];
                 const videos = videosResult.data || [];
 
+                // Charger les compteurs de réactions RÉELS depuis la base de données
+                await loadAllReactionCounts(articles, videos);
+
                 const combinedContent = [
                     ...articles.map(a => ({ ...a, type: 'article' })),
                     ...videos.map(v => ({ ...v, type: 'video' }))
@@ -1644,6 +1647,70 @@
             } catch (error) {
                 console.error('Erreur de chargement du contenu:', error);
                 document.getElementById('loader').innerHTML = '<p style="color: red;">Erreur de chargement du contenu</p>';
+            }
+        }
+
+        async function loadAllReactionCounts(articles, videos) {
+            try {
+                // Charger tous les compteurs de réactions pour les articles
+                const articleIds = articles.map(a => a.article_id);
+                if (articleIds.length > 0) {
+                    const { data: articleReactions, error: articleError } = await supabase
+                        .from('article_reactions')
+                        .select('article_id, reaction_type')
+                        .in('article_id', articleIds);
+                    
+                    if (articleError) throw articleError;
+
+                    // Regrouper les réactions par article
+                    const reactionsByArticle = {};
+                    articleReactions?.forEach(r => {
+                        if (!reactionsByArticle[r.article_id]) {
+                            reactionsByArticle[r.article_id] = { like: 0, love: 0, rire: 0, colere: 0 };
+                        }
+                        reactionsByArticle[r.article_id][r.reaction_type]++;
+                    });
+
+                    // Mettre à jour les articles avec les vrais compteurs
+                    articles.forEach(article => {
+                        const counts = reactionsByArticle[article.article_id] || { like: 0, love: 0, rire: 0, colere: 0 };
+                        article.reaction_like = counts.like;
+                        article.reaction_love = counts.love;
+                        article.reaction_rire = counts.rire;
+                        article.reaction_colere = counts.colere;
+                    });
+                }
+
+                // Charger tous les compteurs de réactions pour les vidéos
+                const videoIds = videos.map(v => v.video_id);
+                if (videoIds.length > 0) {
+                    const { data: videoReactions, error: videoError } = await supabase
+                        .from('video_reactions')
+                        .select('video_id, reaction_type')
+                        .in('video_id', videoIds);
+                    
+                    if (videoError) throw videoError;
+
+                    // Regrouper les réactions par vidéo
+                    const reactionsByVideo = {};
+                    videoReactions?.forEach(r => {
+                        if (!reactionsByVideo[r.video_id]) {
+                            reactionsByVideo[r.video_id] = { like: 0, love: 0, rire: 0, colere: 0 };
+                        }
+                        reactionsByVideo[r.video_id][r.reaction_type]++;
+                    });
+
+                    // Mettre à jour les vidéos avec les vrais compteurs
+                    videos.forEach(video => {
+                        const counts = reactionsByVideo[video.video_id] || { like: 0, love: 0, rire: 0, colere: 0 };
+                        video.reaction_like = counts.like;
+                        video.reaction_love = counts.love;
+                        video.reaction_rire = counts.rire;
+                        video.reaction_colere = counts.colere;
+                    });
+                }
+            } catch (error) {
+                console.error('Erreur chargement compteurs de réactions:', error);
             }
         }
 
@@ -1727,6 +1794,12 @@
 
             const userReaction = userReactionsCache[article.article_id];
             const commentCount = commentCountsCache[article.article_id] || 0;
+            
+            // Utiliser les compteurs RÉELS depuis la base de données
+            const likeCount = article.reaction_like || 0;
+            const loveCount = article.reaction_love || 0;
+            const rireCount = article.reaction_rire || 0;
+            const colereCount = article.reaction_colere || 0;
 
             card.innerHTML = `
                 <div class="article-header">
@@ -1746,16 +1819,16 @@
                 </div>
                 <div class="reactions">
                     <button class="reaction-btn ${userReaction === 'like' ? 'active active-like' : ''}" onclick="handleReaction('${article.article_id}', 'like')">
-                        <i class="fas fa-thumbs-up"></i><span>${article.reaction_like || 0}</span>
+                        <i class="fas fa-thumbs-up"></i><span>${likeCount}</span>
                     </button>
                     <button class="reaction-btn ${userReaction === 'love' ? 'active active-love' : ''}" onclick="handleReaction('${article.article_id}', 'love')">
-                        <i class="fas fa-heart"></i><span>${article.reaction_love || 0}</span>
+                        <i class="fas fa-heart"></i><span>${loveCount}</span>
                     </button>
                     <button class="reaction-btn ${userReaction === 'rire' ? 'active active-rire' : ''}" onclick="handleReaction('${article.article_id}', 'rire')">
-                        <i class="fas fa-laugh"></i><span>${article.reaction_rire || 0}</span>
+                        <i class="fas fa-laugh"></i><span>${rireCount}</span>
                     </button>
                     <button class="reaction-btn ${userReaction === 'colere' ? 'active active-colere' : ''}" onclick="handleReaction('${article.article_id}', 'colere')">
-                        <i class="fas fa-angry"></i><span>${article.reaction_colere || 0}</span>
+                        <i class="fas fa-angry"></i><span>${colereCount}</span>
                     </button>
                 </div>
                 <div class="comments-reactions-section">
@@ -2527,4 +2600,4 @@
         }
     </script>
 </body>
-                                                   </html>
+    </html>
