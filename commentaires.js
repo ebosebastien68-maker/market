@@ -1,6 +1,8 @@
 // =====================================================================
-// commentaires.js - Widget de commentaires avec édition 
-// Support : Articles & Vidéos
+// commentaires.js - Widget de commentaires avec réponses
+// Compatible avec : sessions_commentaires + video_commentaires
+// Support : Articles & Vidéos avec réponses
+// Date : 12/10/2025
 // =====================================================================
 
 window.CommentsWidget = {
@@ -16,7 +18,7 @@ window.CommentsWidget = {
     await this.refreshComments(comments);
   },
 
-  // Méthode spécifique pour les vidéos (alias pour compatibilité)
+  // Méthode spécifique pour les vidéos (alias)
   async renderVideo(container, videoId, comments, currentUser, userProfile) {
     return this.render(container, videoId, comments, currentUser, userProfile, 'video');
   },
@@ -37,26 +39,31 @@ window.CommentsWidget = {
         .comment-content { padding-left:calc(38px + 0.75rem); }
         .comment-text { color:#1c1e21; margin:0.5rem 0; line-height:1.5; white-space:pre-wrap; word-wrap:break-word; }
         .comment-actions { display:flex; gap:1rem; align-items:center; flex-wrap:wrap; }
-        .comment-btn { background:none; border:none; color:#667eea; font-size:0.8rem; cursor:pointer; font-weight:600; padding:0.25rem; display:inline-flex; align-items:center; gap:0.25rem; transition: all 0.3s; }
-        .comment-btn:hover { text-decoration:underline; transform: translateY(-1px); }
+        .comment-btn { background:none; border:none; color:#667eea; font-size:0.8rem; cursor:pointer; font-weight:600; padding:0.25rem 0.5rem; display:inline-flex; align-items:center; gap:0.3rem; transition: all 0.3s; border-radius: 4px; }
+        .comment-btn:hover { background: rgba(102, 126, 234, 0.1); transform: translateY(-1px); }
         .delete-btn { color:#e74c3c; }
+        .delete-btn:hover { background: rgba(231, 76, 60, 0.1); }
         .share-btn { color:#22c55e; }
+        .share-btn:hover { background: rgba(34, 197, 94, 0.1); }
         .replies-container { margin-left:calc(38px + 0.75rem); border-left:2px solid #eef0f2; padding-left:1rem; margin-top:0.75rem; }
-        .reply-item { padding:0.75rem 0; border-bottom:1px solid #f2f4f6; }
+        .reply-item { padding:0.75rem 0; border-bottom:1px solid #f2f4f6; display: flex; gap: 10px; }
+        .reply-item:last-child { border-bottom: none; }
         .comment-input-area { margin-top:1rem; position:relative; }
         .comment-textarea { width:100%; padding:0.75rem; border:1px solid #ced0d4; border-radius:8px; font-family:inherit; font-size:0.9rem; min-height:80px; resize:vertical; transition:border-color 0.3s; }
         .comment-textarea:focus { outline:none; border-color:#667eea; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); }
         .char-counter { font-size:0.75rem; color:#8a9199; text-align:right; margin-top:0.25rem; }
-        .comment-submit { margin-top:0.5rem; padding:0.6rem 1.25rem; background:#0866ff; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:600; transition:background-color 0.2s, transform 0.2s; }
-        .comment-submit:hover { background-color:#0655d4; transform:translateY(-1px); }
-        .comment-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+        .comment-submit { margin-top:0.5rem; padding:0.6rem 1.25rem; background:#0866ff; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:600; transition:all 0.3s; display: inline-flex; align-items: center; gap: 6px; }
+        .comment-submit:hover { background-color:#0655d4; transform:translateY(-2px); box-shadow: 0 4px 8px rgba(8, 102, 255, 0.3); }
+        .comment-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: translateY(0); }
         .empty-state, .loading-state { text-align:center; padding:2.5rem 1.25rem; color:#8a9199; }
         .spinner { border:2px solid #f3f3f3; border-top:2px solid #667eea; border-radius:50%; width:24px; height:24px; animation:spin 1s linear infinite; margin:0 auto 0.5rem; }
         @keyframes spin { 0% { transform:rotate(0deg); } 100% { transform:rotate(360deg); } }
-        .small-ghost { background:#f6f8fb; color:#333; padding:6px 10px; border-radius:6px; border:1px solid #e6e9ef; cursor:pointer; transition: all 0.3s; }
-        .small-ghost:hover { background: #e6e9ef; }
+        .small-ghost { background:#f6f8fb; color:#333; padding:6px 12px; border-radius:6px; border:1px solid #e6e9ef; cursor:pointer; transition: all 0.3s; font-size: 0.85rem; }
+        .small-ghost:hover { background: #e6e9ef; transform: translateY(-1px); }
         .muted { color:#8a9199; font-size:0.9rem; }
-        .success-message { color: #22c55e; font-size: 0.85rem; padding: 8px; background: rgba(34, 197, 94, 0.1); border-radius: 6px; margin-top: 8px; }
+        .success-message { color: #22c55e; font-size: 0.85rem; padding: 8px 12px; background: rgba(34, 197, 94, 0.1); border-radius: 6px; margin-top: 8px; border-left: 3px solid #22c55e; }
+        .error-message { color: #e74c3c; font-size: 0.85rem; padding: 8px 12px; background: rgba(231, 76, 60, 0.1); border-radius: 6px; margin-top: 8px; border-left: 3px solid #e74c3c; }
+        .reply-box { background: var(--bg-primary); padding: 12px; border-radius: 8px; margin-top: 10px; }
       </style>
 
       <div class="comments-widget">
@@ -70,9 +77,11 @@ window.CommentsWidget = {
             <button id="comment-submit-btn-${this.contentId}" class="comment-submit">
               <i class="fas fa-paper-plane"></i> Publier
             </button>
-            <div id="comment-feedback-${this.contentId}" style="color:#e74c3c; margin-top:8px; display:none;"></div>
+            <div id="comment-feedback-${this.contentId}" style="display:none; margin-top:8px;"></div>
           </div>
-        ` : '<p style="text-align:center; margin-top:1rem; font-size:0.9rem; color: var(--text-secondary);">Veuillez vous <a href="connexion.html" style="color: #667eea; text-decoration: none; font-weight: 600;">connecter</a> pour commenter.</p>'}
+        ` : `<p style="text-align:center; margin-top:1rem; font-size:0.9rem; color: var(--text-secondary);">
+          Veuillez vous <a href="connexion.html" style="color: #667eea; text-decoration: none; font-weight: 600;">connecter</a> pour commenter.
+        </p>`}
       </div>
     `;
   },
@@ -91,11 +100,17 @@ window.CommentsWidget = {
       
       if (!comments) {
         const tableName = this.contentType === 'video' ? 'video_commentaires' : 'sessions_commentaires';
+        const responsesTable = this.contentType === 'video' ? 'video_reponses' : 'session_reponses';
         const idField = this.contentType === 'video' ? 'video_id' : 'article_id';
+        const commentIdField = this.contentType === 'video' ? 'commentaire_id' : 'session_id';
         
         const { data, error } = await window.supabaseClient.supabase
           .from(tableName)
-          .select(`*, users_profile(*)`)
+          .select(`
+            *, 
+            users_profile(*),
+            ${responsesTable}(*, users_profile(*))
+          `)
           .eq(idField, this.contentId)
           .order('date_created', { ascending: false });
 
@@ -134,13 +149,17 @@ window.CommentsWidget = {
     commentEl.className = 'comment-item';
     
     const id = this.contentType === 'video' ? 
-      (comment.comment_id ?? comment.id ?? 'unknown') : 
-      (comment.session_id ?? comment.id ?? 'unknown');
+      (comment.commentaire_id ?? comment.id) : 
+      (comment.session_id ?? comment.id);
     
     commentEl.id = `comment-${id}`;
 
     const author = comment.users_profile ?? { prenom: 'Utilisateur', nom: '', role: 'user', user_id: null };
     const initials = `${(author.prenom?.[0] ?? '?')}${(author.nom?.[0] ?? '')}`.toUpperCase();
+    
+    const responses = this.contentType === 'video' ? 
+      (comment.video_reponses ?? []) : 
+      (comment.session_reponses ?? []);
 
     const canEdit = this.currentUser && this.currentUser.id === comment.user_id;
     const canDelete = this.userProfile && (
@@ -158,12 +177,16 @@ window.CommentsWidget = {
       <div class="comment-content">
         <div class="comment-text" data-text>${this.escapeHtml(comment.texte)}</div>
         <div class="comment-actions">
+          ${this.currentUser ? `<button class="comment-btn" data-action="reply"><i class="fas fa-reply"></i> Répondre</button>` : ''}
+          ${responses.length > 0 ? `<button class="comment-btn" data-action="toggle-replies"><i class="fas fa-comments"></i> ${responses.length} réponse(s)</button>` : ''}
           <button class="comment-btn share-btn" data-action="share" title="Partager ce commentaire">
             <i class="fas fa-share-alt"></i> Partager
           </button>
           ${canEdit ? `<button class="comment-btn" data-action="edit"><i class="fas fa-edit"></i> Modifier</button>` : ''}
           ${canDelete ? `<button class="comment-btn delete-btn" data-action="delete"><i class="fas fa-trash"></i> Supprimer</button>` : ''}
         </div>
+        <div class="reply-box" style="display:none;"></div>
+        <div class="replies-container" style="display:none;"></div>
       </div>
     `;
 
@@ -172,12 +195,22 @@ window.CommentsWidget = {
 
   hookCommentEvents(el, comment) {
     const id = this.contentType === 'video' ? 
-      (comment.comment_id ?? comment.id) : 
+      (comment.commentaire_id ?? comment.id) : 
       (comment.session_id ?? comment.id);
     
+    const replyBtn = el.querySelector('[data-action="reply"]');
+    const toggleRepliesBtn = el.querySelector('[data-action="toggle-replies"]');
     const shareBtn = el.querySelector('[data-action="share"]');
     const editBtn = el.querySelector('[data-action="edit"]');
     const deleteBtn = el.querySelector('[data-action="delete"]');
+
+    if (replyBtn) {
+      replyBtn.addEventListener('click', () => this.openReplyBox(el, comment));
+    }
+
+    if (toggleRepliesBtn) {
+      toggleRepliesBtn.addEventListener('click', () => this.toggleReplies(el, comment));
+    }
 
     if (shareBtn) {
       shareBtn.addEventListener('click', () => this.shareComment(comment));
@@ -189,112 +222,12 @@ window.CommentsWidget = {
 
     if (deleteBtn) {
       deleteBtn.addEventListener('click', async () => {
-        if (!confirm('Supprimer ce commentaire définitivement ?')) return;
+        if (!confirm('Supprimer ce commentaire et toutes ses réponses ?')) return;
         try {
           const tableName = this.contentType === 'video' ? 'video_commentaires' : 'sessions_commentaires';
-          const idField = this.contentType === 'video' ? 'comment_id' : 'session_id';
+          const idField = this.contentType === 'video' ? 'commentaire_id' : 'session_id';
           
           const { error } = await window.supabaseClient.supabase
-            .from(tableName)
-            .delete()
-            .eq(idField, id);
-          
-          if (error) throw error;
-          await this.refreshComments();
-        } catch (err) {
-          console.error('Erreur suppression commentaire:', err);
-          alert('Erreur lors de la suppression.');
-        }
-      });
-    }
-  },
-
-  shareComment(comment) {
-    const text = comment.texte?.substring(0, 100) + (comment.texte?.length > 100 ? '...' : '');
-    const commentId = this.contentType === 'video' ? 
-      (comment.comment_id ?? comment.id) : 
-      (comment.session_id ?? comment.id);
-    const url = `${window.location.origin}?comment=${commentId}&type=${this.contentType}`;
-
-    if (navigator.share) {
-      navigator.share({
-        title: `Commentaire - Market ${this.contentType === 'video' ? 'Vidéo' : 'Article'}`,
-        text: text,
-        url: url
-      }).then(() => {
-        console.log('Partage réussi');
-      }).catch(err => {
-        console.log('Partage annulé ou non supporté:', err);
-        this.fallbackShare(text, url);
-      });
-    } else {
-      this.fallbackShare(text, url);
-    }
-  },
-
-  fallbackShare(text, url) {
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(`${text}\n${url}`)
-        .then(() => {
-          alert('✅ Lien du commentaire copié dans le presse-papier !');
-        })
-        .catch(() => {
-          prompt('Copiez ce lien:', url);
-        });
-    } else {
-      prompt('Copiez ce lien:', url);
-    }
-  },
-
-  openEditComment(el, comment) {
-    const textNode = el.querySelector('[data-text]');
-    if (!textNode) return;
-    const original = comment.texte ?? '';
-    
-    if (el.querySelector('.editing-area')) return;
-
-    textNode.style.display = 'none';
-    const editArea = document.createElement('div');
-    editArea.className = 'editing-area';
-    editArea.innerHTML = `
-      <textarea class="comment-textarea edit-input" rows="4">${this.escapeHtml(original)}</textarea>
-      <div style="display:flex; gap:8px; margin-top:8px;">
-        <button class="comment-submit edit-save"><i class="fas fa-check"></i> Enregistrer</button>
-        <button class="small-ghost edit-cancel"><i class="fas fa-times"></i> Annuler</button>
-      </div>
-      <div class="edit-feedback" style="color:#e74c3c; margin-top:6px; display:none;"></div>
-    `;
-    textNode.parentNode.insertBefore(editArea, textNode.nextSibling);
-
-    const saveBtn = editArea.querySelector('.edit-save');
-    const cancelBtn = editArea.querySelector('.edit-cancel');
-    const textarea = editArea.querySelector('.edit-input');
-    const feedback = editArea.querySelector('.edit-feedback');
-
-    cancelBtn.addEventListener('click', () => {
-      editArea.remove();
-      textNode.style.display = '';
-    });
-
-    saveBtn.addEventListener('click', async () => {
-      const newText = textarea.value.trim();
-      if (!newText) {
-        feedback.textContent = 'Le commentaire ne peut pas être vide.';
-        feedback.style.display = 'block';
-        return;
-      }
-      
-      saveBtn.disabled = true;
-      saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enregistrement...';
-      
-      try {
-        const tableName = this.contentType === 'video' ? 'video_commentaires' : 'sessions_commentaires';
-        const idField = this.contentType === 'video' ? 'comment_id' : 'session_id';
-        const id = this.contentType === 'video' ? 
-          (comment.comment_id ?? comment.id) : 
-          (comment.session_id ?? comment.id);
-        
-        const { error } = await window.supabaseClient.supabase
           .from(tableName)
           .update({ texte: newText })
           .eq(idField, id);
@@ -304,6 +237,7 @@ window.CommentsWidget = {
         await this.refreshComments();
       } catch (err) {
         console.error('Erreur modification commentaire:', err);
+        feedback.className = 'error-message';
         feedback.textContent = 'Impossible de mettre à jour le commentaire.';
         feedback.style.display = 'block';
         saveBtn.disabled = false;
@@ -352,6 +286,7 @@ window.CommentsWidget = {
 
     const texte = textarea.value.trim();
     if (!texte) {
+      feedback.className = 'error-message';
       feedback.textContent = 'Écrivez un commentaire avant de publier.';
       feedback.style.display = 'block';
       setTimeout(() => { feedback.style.display = 'none'; }, 3000);
@@ -383,16 +318,15 @@ window.CommentsWidget = {
       if (charCount) charCount.textContent = '0';
       
       feedback.className = 'success-message';
-      feedback.textContent = '✅ Commentaire publié avec succès !';
+      feedback.innerHTML = '<i class="fas fa-check-circle"></i> Commentaire publié avec succès !';
       feedback.style.display = 'block';
       setTimeout(() => { feedback.style.display = 'none'; }, 3000);
       
       await this.refreshComments();
     } catch (err) {
       console.error('Erreur publication commentaire:', err);
-      feedback.className = '';
-      feedback.style.color = '#e74c3c';
-      feedback.textContent = 'Impossible de publier le commentaire. Réessayez.';
+      feedback.className = 'error-message';
+      feedback.innerHTML = '<i class="fas fa-exclamation-circle"></i> Impossible de publier le commentaire. Réessayez.';
       feedback.style.display = 'block';
     } finally {
       btn.disabled = false;
@@ -418,7 +352,9 @@ window.CommentsWidget = {
       return d.toLocaleDateString('fr-FR', { 
         day: '2-digit', 
         month: 'short', 
-        year: d.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+        year: d.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
+        hour: '2-digit',
+        minute: '2-digit'
       });
     } catch (e) {
       return dateString || '';
@@ -435,3 +371,352 @@ window.CommentsWidget = {
       .replace(/'/g, '&#039;');
   }
 };
+
+// =====================================================================
+// AUTO-INITIALISATION & LOGS
+// =====================================================================
+console.log('✅ Widget de commentaires chargé v2.0');
+console.log('📦 Support: Articles (sessions_commentaires) & Vidéos (video_commentaires)');
+console.log('🔄 Fonctionnalités: Commentaires, Réponses, Édition, Suppression, Partage');
+console.log('🎯 Compatible avec nouvelle structure SQL (commentaire_id, video_reponses)');
+
+// Export pour debugging
+if (typeof window !== 'undefined') {
+  window.CommentsWidgetDebug = {
+    version: '2.0',
+    tables: {
+      articles: 'sessions_commentaires',
+      videos: 'video_commentaires',
+      articleResponses: 'session_reponses',
+      videoResponses: 'video_reponses'
+    },
+    idFields: {
+      articles: { content: 'article_id', comment: 'session_id', response: 'reponse_id' },
+      videos: { content: 'video_id', comment: 'commentaire_id', response: 'reponse_id' }
+    }
+  };
+}base
+            .from(tableName)
+            .delete()
+            .eq(idField, id);
+          
+          if (error) throw error;
+          await this.refreshComments();
+        } catch (err) {
+          console.error('Erreur suppression commentaire:', err);
+          alert('Erreur lors de la suppression.');
+        }
+      });
+    }
+  },
+
+  openReplyBox(el, comment) {
+    const box = el.querySelector('.reply-box');
+    if (!box) return;
+    
+    if (box.style.display === 'block') {
+      box.style.display = 'none';
+      box.innerHTML = '';
+      return;
+    }
+    
+    box.style.display = 'block';
+    box.innerHTML = `
+      <textarea class="comment-textarea reply-input" rows="3" placeholder="Écrire une réponse..." maxlength="500"></textarea>
+      <div style="display:flex; gap:8px; margin-top:8px; justify-content: flex-end;">
+        <button class="small-ghost reply-cancel"><i class="fas fa-times"></i> Annuler</button>
+        <button class="comment-submit reply-submit"><i class="fas fa-reply"></i> Répondre</button>
+      </div>
+      <div class="reply-feedback" style="display:none; margin-top:6px;"></div>
+    `;
+
+    const submit = box.querySelector('.reply-submit');
+    const cancel = box.querySelector('.reply-cancel');
+    const textarea = box.querySelector('.reply-input');
+    const feedback = box.querySelector('.reply-feedback');
+
+    cancel.addEventListener('click', () => {
+      box.style.display = 'none';
+      box.innerHTML = '';
+    });
+
+    submit.addEventListener('click', async () => {
+      const texte = textarea.value.trim();
+      if (!texte) {
+        feedback.className = 'error-message';
+        feedback.textContent = 'Écrivez une réponse avant d\'envoyer.';
+        feedback.style.display = 'block';
+        return;
+      }
+      
+      submit.disabled = true;
+      submit.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi...';
+      
+      try {
+        const responsesTable = this.contentType === 'video' ? 'video_reponses' : 'session_reponses';
+        const commentIdField = this.contentType === 'video' ? 'commentaire_id' : 'session_id';
+        const commentId = this.contentType === 'video' ? comment.commentaire_id : comment.session_id;
+        
+        const payload = {
+          [commentIdField]: commentId,
+          user_id: this.currentUser.id,
+          texte,
+          date_created: new Date().toISOString()
+        };
+        
+        const { error } = await window.supabaseClient.supabase
+          .from(responsesTable)
+          .insert([payload]);
+        
+        if (error) throw error;
+        
+        await this.refreshComments();
+      } catch (err) {
+        console.error('Erreur réponse:', err);
+        feedback.className = 'error-message';
+        feedback.textContent = 'Impossible d\'envoyer la réponse.';
+        feedback.style.display = 'block';
+        submit.disabled = false;
+        submit.innerHTML = '<i class="fas fa-reply"></i> Répondre';
+      }
+    });
+  },
+
+  async toggleReplies(el, comment) {
+    const container = el.querySelector('.replies-container');
+    if (!container) return;
+    
+    if (container.style.display === 'block') {
+      container.style.display = 'none';
+      container.innerHTML = '';
+      return;
+    }
+
+    const responses = this.contentType === 'video' ? 
+      (comment.video_reponses ?? []) : 
+      (comment.session_reponses ?? []);
+    
+    if (responses.length === 0) {
+      container.innerHTML = '<div style="padding:8px; color:#888; font-style: italic;">Aucune réponse.</div>';
+      container.style.display = 'block';
+      return;
+    }
+
+    container.innerHTML = responses.map(r => {
+      const author = r.users_profile ?? { prenom: 'Utilisateur', nom: '', role: 'user', user_id: null };
+      const initials = `${(author.prenom?.[0] ?? '?')}${(author.nom?.[0] ?? '')}`.toUpperCase();
+      
+      const canEditReply = this.currentUser && this.currentUser.id === r.user_id;
+      const canDeleteReply = this.userProfile && (
+        this.userProfile.user_id === r.user_id ||
+        this.userProfile.role === 'adminpro' ||
+        (this.userProfile.role === 'admin' && (author.role === 'user' || !author.role))
+      );
+      
+      const respId = this.contentType === 'video' ? r.reponse_id : r.reponse_id;
+      
+      return `
+        <div class="reply-item" data-reply-id="${respId}">
+          <div class="comment-avatar" style="width:32px; height:32px; font-size:0.8rem;">${this.escapeHtml(initials)}</div>
+          <div style="flex:1;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom: 4px;">
+              <span style="font-weight:600; font-size: 0.9rem;">${this.escapeHtml(author.prenom)} ${this.escapeHtml(author.nom)}</span>
+              <span style="color:#8a9199; font-size:11px;">${this.formatDate(r.date_created)}</span>
+            </div>
+            <div class="reply-text" data-reply-text style="font-size: 0.9rem; line-height: 1.5;">${this.escapeHtml(r.texte)}</div>
+            <div style="margin-top:6px; display: flex; gap: 8px;">
+              ${canEditReply ? `<button class="comment-btn reply-edit-btn" data-action="edit-reply" style="font-size: 0.75rem;"><i class="fas fa-edit"></i> Modifier</button>` : ''}
+              ${canDeleteReply ? `<button class="comment-btn delete-btn reply-delete-btn" data-action="delete-reply" style="font-size: 0.75rem;"><i class="fas fa-trash"></i> Supprimer</button>` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    container.style.display = 'block';
+    
+    setTimeout(() => {
+      container.querySelectorAll('.reply-item').forEach(replyEl => {
+        const rid = replyEl.getAttribute('data-reply-id');
+        const editBtn = replyEl.querySelector('[data-action="edit-reply"]');
+        const deleteBtn = replyEl.querySelector('[data-action="delete-reply"]');
+        const replyData = responses.find(r => (this.contentType === 'video' ? r.reponse_id : r.reponse_id) === rid);
+
+        if (editBtn) {
+          editBtn.addEventListener('click', () => this.openEditReply(replyEl, replyData));
+        }
+        
+        if (deleteBtn) {
+          deleteBtn.addEventListener('click', async () => {
+            if (!confirm('Supprimer cette réponse ?')) return;
+            try {
+              const responsesTable = this.contentType === 'video' ? 'video_reponses' : 'session_reponses';
+              
+              const { error } = await window.supabaseClient.supabase
+                .from(responsesTable)
+                .delete()
+                .eq('reponse_id', rid);
+              
+              if (error) throw error;
+              await this.refreshComments();
+            } catch (err) {
+              console.error('Erreur suppression réponse:', err);
+              alert('Erreur lors de la suppression de la réponse.');
+            }
+          });
+        }
+      });
+    }, 0);
+  },
+
+  openEditReply(replyEl, replyData) {
+    const textNode = replyEl.querySelector('[data-reply-text]');
+    if (!textNode || !replyData) return;
+    
+    const original = replyData.texte ?? '';
+    if (replyEl.querySelector('.editing-reply-area')) return;
+
+    textNode.style.display = 'none';
+    const editArea = document.createElement('div');
+    editArea.className = 'editing-reply-area';
+    editArea.innerHTML = `
+      <textarea class="comment-textarea edit-input" rows="3">${this.escapeHtml(original)}</textarea>
+      <div style="display:flex; gap:8px; margin-top:8px; justify-content: flex-end;">
+        <button class="small-ghost edit-cancel-reply"><i class="fas fa-times"></i> Annuler</button>
+        <button class="comment-submit edit-save-reply"><i class="fas fa-check"></i> Enregistrer</button>
+      </div>
+      <div class="edit-feedback" style="display:none; margin-top:6px;"></div>
+    `;
+    textNode.parentNode.insertBefore(editArea, textNode.nextSibling);
+
+    const saveBtn = editArea.querySelector('.edit-save-reply');
+    const cancelBtn = editArea.querySelector('.edit-cancel-reply');
+    const textarea = editArea.querySelector('.edit-input');
+    const feedback = editArea.querySelector('.edit-feedback');
+
+    cancelBtn.addEventListener('click', () => {
+      editArea.remove();
+      textNode.style.display = '';
+    });
+
+    saveBtn.addEventListener('click', async () => {
+      const newText = textarea.value.trim();
+      if (!newText) {
+        feedback.className = 'error-message';
+        feedback.textContent = 'La réponse ne peut pas être vide.';
+        feedback.style.display = 'block';
+        return;
+      }
+      
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enregistrement...';
+      
+      try {
+        const responsesTable = this.contentType === 'video' ? 'video_reponses' : 'session_reponses';
+        const rid = this.contentType === 'video' ? replyData.reponse_id : replyData.reponse_id;
+        
+        const { error } = await window.supabaseClient.supabase
+          .from(responsesTable)
+          .update({ texte: newText })
+          .eq('reponse_id', rid);
+        
+        if (error) throw error;
+        await this.refreshComments();
+      } catch (err) {
+        console.error('Erreur modification réponse:', err);
+        feedback.className = 'error-message';
+        feedback.textContent = 'Impossible de mettre à jour la réponse.';
+        feedback.style.display = 'block';
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<i class="fas fa-check"></i> Enregistrer';
+      }
+    });
+  },
+
+  shareComment(comment) {
+    const text = comment.texte?.substring(0, 100) + (comment.texte?.length > 100 ? '...' : '');
+    const commentId = this.contentType === 'video' ? 
+      (comment.commentaire_id ?? comment.id) : 
+      (comment.session_id ?? comment.id);
+    const url = `${window.location.origin}?comment=${commentId}&type=${this.contentType}`;
+
+    if (navigator.share) {
+      navigator.share({
+        title: `Commentaire - Market ${this.contentType === 'video' ? 'Vidéo' : 'Article'}`,
+        text: text,
+        url: url
+      }).then(() => {
+        console.log('Partage réussi');
+      }).catch(err => {
+        console.log('Partage annulé:', err);
+        this.fallbackShare(text, url);
+      });
+    } else {
+      this.fallbackShare(text, url);
+    }
+  },
+
+  fallbackShare(text, url) {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(`${text}\n${url}`)
+        .then(() => {
+          alert('✅ Lien du commentaire copié dans le presse-papier !');
+        })
+        .catch(() => {
+          prompt('Copiez ce lien:', url);
+        });
+    } else {
+      prompt('Copiez ce lien:', url);
+    }
+  },
+
+  openEditComment(el, comment) {
+    const textNode = el.querySelector('[data-text]');
+    if (!textNode) return;
+    const original = comment.texte ?? '';
+    
+    if (el.querySelector('.editing-area')) return;
+
+    textNode.style.display = 'none';
+    const editArea = document.createElement('div');
+    editArea.className = 'editing-area';
+    editArea.innerHTML = `
+      <textarea class="comment-textarea edit-input" rows="4">${this.escapeHtml(original)}</textarea>
+      <div style="display:flex; gap:8px; margin-top:8px; justify-content: flex-end;">
+        <button class="small-ghost edit-cancel"><i class="fas fa-times"></i> Annuler</button>
+        <button class="comment-submit edit-save"><i class="fas fa-check"></i> Enregistrer</button>
+      </div>
+      <div class="edit-feedback" style="display:none; margin-top:6px;"></div>
+    `;
+    textNode.parentNode.insertBefore(editArea, textNode.nextSibling);
+
+    const saveBtn = editArea.querySelector('.edit-save');
+    const cancelBtn = editArea.querySelector('.edit-cancel');
+    const textarea = editArea.querySelector('.edit-input');
+    const feedback = editArea.querySelector('.edit-feedback');
+
+    cancelBtn.addEventListener('click', () => {
+      editArea.remove();
+      textNode.style.display = '';
+    });
+
+    saveBtn.addEventListener('click', async () => {
+      const newText = textarea.value.trim();
+      if (!newText) {
+        feedback.className = 'error-message';
+        feedback.textContent = 'Le commentaire ne peut pas être vide.';
+        feedback.style.display = 'block';
+        return;
+      }
+      
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enregistrement...';
+      
+      try {
+        const tableName = this.contentType === 'video' ? 'video_commentaires' : 'sessions_commentaires';
+        const idField = this.contentType === 'video' ? 'commentaire_id' : 'session_id';
+        const id = this.contentType === 'video' ? 
+          (comment.commentaire_id ?? comment.id) : 
+          (comment.session_id ?? comment.id);
+        
+        const { error } = await window.supabaseClient.supa
