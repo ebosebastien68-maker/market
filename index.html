@@ -1302,8 +1302,6 @@
         let isSearching = false;
         let userReactionsCache = {};
         let commentCountsCache = {};
-        let articleCommentCountsCache = {};
-        let videoCommentCountsCache = {};
         let currentShareContent = null;
 
         const themeToggle = document.getElementById('theme-toggle');
@@ -1575,22 +1573,20 @@
 
         async function loadCommentCounts() {
             try {
-                const [articlesCommentsResult, videosCommentsResult] = await Promise.all([
-                    supabase.from('sessions_commentaires').select('article_id'),
-                    supabase.from('video_commentaires').select('video_id').catch(() => ({ data: [] }))
-                ]);
+                // Charger TOUS les compteurs depuis la nouvelle table
+                const { data: counts, error } = await supabase
+                    .from('commentaires_count')
+                    .select('content_id, content_type, total_comments');
                 
-                articleCommentCountsCache = {};
-                articlesCommentsResult.data?.forEach(c => {
-                    articleCommentCountsCache[c.article_id] = (articleCommentCountsCache[c.article_id] || 0) + 1;
+                if (error) throw error;
+                
+                // Remplir le cache avec les vrais compteurs
+                commentCountsCache = {};
+                counts?.forEach(c => {
+                    commentCountsCache[c.content_id] = c.total_comments;
                 });
-
-                videoCommentCountsCache = {};
-                videosCommentsResult.data?.forEach(c => {
-                    videoCommentCountsCache[c.video_id] = (videoCommentCountsCache[c.video_id] || 0) + 1;
-                });
-
-                commentCountsCache = { ...articleCommentCountsCache, ...videoCommentCountsCache };
+                
+                console.log('✅ Compteurs de commentaires chargés:', Object.keys(commentCountsCache).length);
             } catch (error) {
                 console.error('Erreur chargement compteurs commentaires:', error);
             }
@@ -2505,49 +2501,42 @@
                 )
                 .subscribe();
 
-            const videoCommentsChannel = supabase.channel('public:video_commentaires')
+            // Channel pour surveiller les changements dans commentaires_count directement
+            const commentCountsChannel = supabase.channel('public:commentaires_count')
                 .on(
                     'postgres_changes',
                     { 
-                        event: '*', 
+                        event: 'UPDATE', 
                         schema: 'public', 
-                        table: 'video_commentaires'
+                        table: 'commentaires_count'
                     },
-                    async (payload) => {
-                        console.log('Changement commentaire vidéo détecté!', payload);
+                    (payload) => {
+                        console.log('Compteur de commentaires mis à jour!', payload);
+                        const { content_id, content_type, total_comments } = payload.new;
                         
-                        const videoId = payload.new?.video_id || payload.old?.video_id;
-                        if (videoId) {
-                            const { data: videoComments } = await supabase
-                                .from('video_commentaires')
-                                .select('video_id')
-                                .eq('video_id', videoId);
+                        // Mettre à jour le cache
+                        commentCountsCache[content_id] = total_comments;
+                        
+                        // Mettre à jour le badge dans l'UI
+                        const sectionId = content_type === 'video' ? `comments-video-${content_id}` : `comments-${content_id}`;
+                        const commentSection = document.getElementById(sectionId);
+                        const card = commentSection?.closest('.article-card');
+                        
+                        if (card) {
+                            const commentToggle = card.querySelector('.comments-toggle-large');
+                            const existingBadge = commentToggle?.querySelector('.comment-count-badge');
                             
-                            const count = videoComments?.length || 0;
-                            videoCommentCountsCache[videoId] = count;
-                            commentCountsCache[videoId] = count;
-                            
-                            const commentSection = document.getElementById(`comments-video-${videoId}`);
-                            if (commentSection && commentSection.classList.contains('show')) {
-                                loadVideoComments(videoId, commentSection);
-                            }
-                            
-                            const videoCard = commentSection?.closest('.article-card');
-                            if (videoCard) {
-                                const commentToggle = videoCard.querySelector('.comments-toggle-large');
-                                const existingBadge = commentToggle.querySelector('.comment-count-badge');
-                                if (count > 0) {
-                                    if (existingBadge) {
-                                        existingBadge.textContent = count;
-                                    } else {
-                                        const badge = document.createElement('span');
-                                        badge.className = 'comment-count-badge';
-                                        badge.textContent = count;
-                                        commentToggle.appendChild(badge);
-                                    }
-                                } else if (existingBadge) {
-                                    existingBadge.remove();
+                            if (total_comments > 0) {
+                                if (existingBadge) {
+                                    existingBadge.textContent = total_comments;
+                                } else if (commentToggle) {
+                                    const badge = document.createElement('span');
+                                    badge.className = 'comment-count-badge';
+                                    badge.textContent = total_comments;
+                                    commentToggle.appendChild(badge);
                                 }
+                            } else if (existingBadge) {
+                                existingBadge.remove();
                             }
                         }
                     }
@@ -2594,10 +2583,11 @@
                 supabase.removeChannel(reactionsChannel);
                 supabase.removeChannel(commentsChannel);
                 supabase.removeChannel(videoCommentsChannel);
+                supabase.removeChannel(commentCountsChannel);
                 supabase.removeChannel(videosChannel);
                 supabase.removeChannel(videoReactionsChannel);
             });
         }
     </script>
 </body>
-    </html>
+                </html>
