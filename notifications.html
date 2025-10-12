@@ -130,6 +130,21 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.12);
         }
 
+        .notification-card.new-animation {
+            animation: slideInRight 0.5s ease;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
         .notif-icon {
             width: 50px;
             height: 50px;
@@ -263,9 +278,35 @@
             font-size: 13px;
             font-weight: bold;
         }
+
+        .realtime-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #43e97b;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(67, 233, 123, 0.4);
+            animation: pulse 2s infinite;
+        }
+
+        .realtime-indicator i {
+            font-size: 10px;
+        }
     </style>
 </head>
 <body>
+    <div class="realtime-indicator">
+        <i class="fas fa-circle"></i>
+        Temps réel activé
+    </div>
+
     <div class="container">
         <div class="header">
             <h1>
@@ -312,9 +353,10 @@
     <script>
         const { supabase, getCurrentUser, getUserProfile } = window.supabaseClient;
         let currentUser = null;
-        let userProfile = null; // MISE À JOUR : Pour stocker le profil et le rôle
+        let userProfile = null;
         let allNotifications = [];
         let currentFilter = 'all';
+        let realtimeChannel = null;
 
         window.addEventListener('DOMContentLoaded', async () => {
             currentUser = await getCurrentUser();
@@ -323,18 +365,14 @@
                 return;
             }
             
-            // MISE À JOUR : Récupérer le profil pour connaître le rôle
             userProfile = await getUserProfile(currentUser.id);
 
             await loadNotifications();
-            // Optionnel : recharger périodiquement
-            // setInterval(loadNotifications, 30000); 
+            setupRealtimeSubscription();
         });
 
         async function loadNotifications() {
             try {
-                // La logique reste la même : chaque utilisateur récupère les notifications qui lui sont destinées.
-                // La création de ces notifications est gérée par l'adminpro, comme défini dans le SQL.
                 const { data: notifications, error } = await supabase
                     .from('notifications')
                     .select('*')
@@ -344,7 +382,6 @@
                 if (error) throw error;
 
                 allNotifications = notifications || [];
-                // Appliquer le filtre actuel après chargement
                 filterNotifications(currentFilter);
 
                 document.getElementById('loader').style.display = 'none';
@@ -355,15 +392,92 @@
             }
         }
 
+        function setupRealtimeSubscription() {
+            realtimeChannel = supabase
+                .channel('notifications-changes')
+                .on(
+                    'postgres_changes',
+                    {
+                        event: 'INSERT',
+                        schema: 'public',
+                        table: 'notifications',
+                        filter: `user_id=eq.${currentUser.id}`
+                    },
+                    (payload) => {
+                        console.log('Nouvelle notification en temps réel:', payload);
+                        handleNewNotification(payload.new);
+                    }
+                )
+                .on(
+                    'postgres_changes',
+                    {
+                        event: 'UPDATE',
+                        schema: 'public',
+                        table: 'notifications',
+                        filter: `user_id=eq.${currentUser.id}`
+                    },
+                    (payload) => {
+                        console.log('Notification mise à jour:', payload);
+                        handleUpdateNotification(payload.new);
+                    }
+                )
+                .on(
+                    'postgres_changes',
+                    {
+                        event: 'DELETE',
+                        schema: 'public',
+                        table: 'notifications',
+                        filter: `user_id=eq.${currentUser.id}`
+                    },
+                    (payload) => {
+                        console.log('Notification supprimée:', payload);
+                        handleDeleteNotification(payload.old);
+                    }
+                )
+                .subscribe();
+        }
+
+        function handleNewNotification(notification) {
+            allNotifications.unshift(notification);
+            
+            if (Notification.permission === 'granted') {
+                new Notification('Nouvelle notification', {
+                    body: notification.texte,
+                    icon: '/favicon.ico'
+                });
+            }
+            
+            filterNotifications(currentFilter);
+        }
+
+        function handleUpdateNotification(notification) {
+            const index = allNotifications.findIndex(n => n.notification_id === notification.notification_id);
+            if (index !== -1) {
+                allNotifications[index] = notification;
+                filterNotifications(currentFilter);
+            }
+        }
+
+        function handleDeleteNotification(notification) {
+            allNotifications = allNotifications.filter(n => n.notification_id !== notification.notification_id);
+            filterNotifications(currentFilter);
+        }
+
         function filterNotifications(filter, event) {
             currentFilter = filter;
 
             document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-            // Utiliser l'event si disponible, sinon trouver le bon bouton par une autre méthode
             if (event) {
                 event.currentTarget.classList.add('active');
             } else {
-                document.querySelector(`.tab[onclick*="'${filter}'"]`).classList.add('active');
+                const tabs = document.querySelectorAll('.tab');
+                tabs.forEach(tab => {
+                    if ((filter === 'all' && tab.textContent.includes('Toutes')) ||
+                        (filter === 'unread' && tab.textContent.includes('Non lues')) ||
+                        (filter === 'read' && tab.textContent.includes('Lues'))) {
+                        tab.classList.add('active');
+                    }
+                });
             }
 
             let filtered = allNotifications;
@@ -410,7 +524,6 @@
             const iconType = getNotificationType(notif.texte);
             const timeAgo = formatTimeAgo(notif.date_created);
 
-            // MISE À JOUR : Affichage conditionnel du bouton de suppression
             const deleteButtonHtml = userProfile && userProfile.role === 'adminpro' 
                 ? `<button class="delete-btn" onclick="deleteNotification('${notif.notification_id}', event)">
                        <i class="fas fa-trash-alt"></i>
@@ -445,7 +558,6 @@
             return card;
         }
 
-        // ... Les fonctions getNotificationIcon, getNotificationType, formatTimeAgo restent identiques ...
         function getNotificationIcon(text) {
             const textLower = text.toLowerCase();
             if (textLower.includes('réaction')) return 'fas fa-heart';
@@ -484,16 +596,11 @@
 
         async function markAsRead(notificationId) {
             try {
-                // L'utilisateur peut marquer ses propres notifications comme lues.
-                // La policy SQL devrait être ajustée pour permettre UPDATE par le propriétaire.
-                // On suppose ici que la policy `FOR ALL` de l'adminpro est pour INSERT/DELETE, 
-                // et qu'une autre policy (non fournie) permet à l'utilisateur de faire UPDATE.
                 await supabase
                     .from('notifications')
                     .update({ read_status: true })
                     .eq('notification_id', notificationId);
 
-                // Mettre à jour l'état localement pour une UI réactive
                 const notif = allNotifications.find(n => n.notification_id === notificationId);
                 if (notif) notif.read_status = true;
                 filterNotifications(currentFilter);
@@ -523,7 +630,6 @@
         async function deleteNotification(notificationId, event) {
             event.stopPropagation();
             
-            // Sécurité côté client : double vérification que l'utilisateur est bien adminpro
             if (!userProfile || userProfile.role !== 'adminpro') {
                 alert("Vous n'avez pas les droits pour effectuer cette action.");
                 return;
@@ -539,7 +645,6 @@
                     .delete()
                     .eq('notification_id', notificationId);
                 
-                // Mettre à jour l'UI après la suppression
                 allNotifications = allNotifications.filter(n => n.notification_id !== notificationId);
                 filterNotifications(currentFilter);
 
@@ -554,6 +659,16 @@
             div.textContent = text;
             return div.innerHTML;
         }
+
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+
+        window.addEventListener('beforeunload', () => {
+            if (realtimeChannel) {
+                supabase.removeChannel(realtimeChannel);
+            }
+        });
     </script>
 </body>
 </html>
