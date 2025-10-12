@@ -445,4 +445,88 @@ window.CommentsWidget = {
 
   addEventListeners() {
     const commentInput = this.container.querySelector('#comment-input');
-    const submitBtn = this.containe
+    const submitBtn = this.container.querySelector('#comment-submit-btn');
+    const charCount = this.container.querySelector('#char-count');
+
+    if (commentInput) {
+      commentInput.addEventListener('input', () => {
+        charCount.textContent = commentInput.value.length;
+      });
+      commentInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+          const btn = this.container.querySelector('#comment-submit-btn');
+          if (btn) btn.click();
+        }
+      });
+    }
+    if (submitBtn) {
+      submitBtn.addEventListener('click', () => this.submitComment());
+    }
+  },
+
+  async submitComment() {
+    if (!this.currentUser) {
+      alert('Connectez-vous pour publier un commentaire.');
+      window.location.href = 'connexion.html';
+      return;
+    }
+    const textarea = this.container.querySelector('#comment-input');
+    const feedback = this.container.querySelector('#comment-feedback');
+    const btn = this.container.querySelector('#comment-submit-btn');
+    if (!textarea || !btn) return;
+
+    const texte = textarea.value.trim();
+    if (!texte) {
+      feedback.textContent = 'Écrivez un commentaire avant de publier.';
+      feedback.style.display = 'block';
+      return;
+    }
+    feedback.style.display = 'none';
+    btn.disabled = true;
+    btn.textContent = 'Envoi...';
+
+    try {
+      const payload = {
+        article_id: this.contentId,
+        user_id: this.currentUser.id,
+        texte,
+        date_created: new Date().toISOString()
+      };
+      const { error } = await window.supabaseClient.supabase
+        .from('sessions_commentaires')
+        .insert([payload]);
+      if (error) throw error;
+      textarea.value = '';
+      this.container.querySelector('#char-count').textContent = '0';
+      await this.refreshComments();
+    } catch (err) {
+      console.error('Erreur publication commentaire:', err);
+      feedback.textContent = 'Impossible de publier le commentaire. Réessayez.';
+      feedback.style.display = 'block';
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = `<i class="fas fa-paper-plane"></i> Publier`;
+    }
+  },
+
+  // utilitaires
+  formatDate(dateString) {
+    try {
+      if (!dateString) return '';
+      const d = new Date(dateString);
+      return d.toLocaleString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    } catch (e) {
+      return dateString || '';
+    }
+  },
+
+  escapeHtml(text) {
+    if (text === null || text === undefined) return '';
+    return String(text)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+};
