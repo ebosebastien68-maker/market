@@ -24,6 +24,8 @@
             --shadow-md: 0 2px 15px rgba(0,0,0,0.1);
             --shadow-lg: 0 4px 20px rgba(0,0,0,0.15);
             --navbar-height: 60px;
+            --accent-color: #667eea;
+            --accent-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
 
         body {
@@ -552,23 +554,60 @@
             justify-content: center;
             gap: 6px;
             font-size: 16px;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
             color: var(--text-secondary);
+            position: relative;
         }
 
         .reaction-btn:hover {
             background: rgba(102, 126, 234, 0.1);
-            transform: scale(1.1);
+            transform: scale(1.05);
         }
 
         .reaction-btn.active {
-            background: rgba(102, 126, 234, 0.15);
-            color: #667eea;
+            animation: reactionPop 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .reaction-btn.active-like {
+            color: #3b82f6;
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .reaction-btn.active-love {
+            color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .reaction-btn.active-rire {
+            color: #f59e0b;
+            background: rgba(245, 158, 11, 0.1);
+        }
+
+        .reaction-btn.active-colere {
+            color: #dc2626;
+            background: rgba(220, 38, 38, 0.1);
+        }
+
+        @keyframes reactionPop {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.2);
+            }
+            100% {
+                transform: scale(1);
+            }
         }
 
         .reaction-btn span {
             font-size: 13px;
             font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .reaction-btn.active span {
+            font-weight: 700;
         }
 
         .comments-reactions-section {
@@ -589,10 +628,36 @@
             transition: all 0.3s;
             font-size: 14px;
             border-right: 1px solid var(--border-color);
+            position: relative;
         }
 
         .comments-toggle-large:hover {
             background: rgba(102, 126, 234, 0.05);
+        }
+
+        .comment-count-badge {
+            background: #667eea;
+            color: white;
+            border-radius: 12px;
+            padding: 2px 8px;
+            font-size: 12px;
+            font-weight: 700;
+            min-width: 24px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+            animation: bounceIn 0.5s ease;
+        }
+
+        @keyframes bounceIn {
+            0% {
+                transform: scale(0);
+            }
+            50% {
+                transform: scale(1.2);
+            }
+            100% {
+                transform: scale(1);
+            }
         }
 
         .user-reactions-btn {
@@ -614,6 +679,152 @@
             font-size: 20px;
             color: #667eea;
         }
+
+        .share-btn {
+            width: 60px;
+            padding: 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            background: rgba(34, 197, 94, 0.03);
+            border-left: 1px solid var(--border-color);
+        }
+
+        .share-btn:hover {
+            background: rgba(34, 197, 94, 0.1);
+        }
+
+        .share-btn i {
+            font-size: 20px;
+            color: #22c55e;
+        }
+
+        .share-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .share-modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .share-modal-content {
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            padding: 25px;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: var(--shadow-lg);
+            animation: slideUp 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .share-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .share-modal-header h3 {
+            color: var(--text-primary);
+            font-size: 18px;
+        }
+
+        .share-modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .share-modal-close:hover {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+        }
+
+        .share-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .share-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 15px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: var(--bg-primary);
+            border: 2px solid transparent;
+        }
+
+        .share-option:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .share-option-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+            transition: all 0.3s;
+        }
+
+        .share-option:hover .share-option-icon {
+            transform: scale(1.1);
+        }
+
+        .share-option span {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .share-facebook { background: #1877f2; }
+        .share-messenger { background: #0084ff; }
+        .share-whatsapp { background: #25d366; }
+        .share-telegram { background: #0088cc; }
+        .share-instagram { background: linear-gradient(45deg, #f58529, #dd2a7b, #8134af); }
+        .share-tiktok { background: #000000; }
 
         .comments-section {
             display: none;
@@ -751,7 +962,6 @@
             text-align: center;
         }
 
-
         @media (max-width: 768px) {
             :root {
                 --navbar-height: 55px;
@@ -871,8 +1081,12 @@
                 padding: 12px;
             }
 
-            .user-reactions-btn {
+            .user-reactions-btn, .share-btn {
                 width: 55px;
+            }
+
+            .share-options {
+                grid-template-columns: repeat(2, 1fr);
             }
         }
 
@@ -1018,6 +1232,55 @@
         </div>
     </div>
 
+    <div class="share-modal" id="share-modal">
+        <div class="share-modal-content">
+            <div class="share-modal-header">
+                <h3><i class="fas fa-share-alt"></i> Partager</h3>
+                <button class="share-modal-close" onclick="closeShareModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="share-options" id="share-options">
+                <div class="share-option" onclick="shareToSocial('facebook')">
+                    <div class="share-option-icon share-facebook">
+                        <i class="fab fa-facebook-f"></i>
+                    </div>
+                    <span>Facebook</span>
+                </div>
+                <div class="share-option" onclick="shareToSocial('messenger')">
+                    <div class="share-option-icon share-messenger">
+                        <i class="fab fa-facebook-messenger"></i>
+                    </div>
+                    <span>Messenger</span>
+                </div>
+                <div class="share-option" onclick="shareToSocial('whatsapp')">
+                    <div class="share-option-icon share-whatsapp">
+                        <i class="fab fa-whatsapp"></i>
+                    </div>
+                    <span>WhatsApp</span>
+                </div>
+                <div class="share-option" onclick="shareToSocial('telegram')">
+                    <div class="share-option-icon share-telegram">
+                        <i class="fab fa-telegram-plane"></i>
+                    </div>
+                    <span>Telegram</span>
+                </div>
+                <div class="share-option" onclick="shareToSocial('instagram')">
+                    <div class="share-option-icon share-instagram">
+                        <i class="fab fa-instagram"></i>
+                    </div>
+                    <span>Instagram</span>
+                </div>
+                <div class="share-option" onclick="shareToSocial('tiktok')">
+                    <div class="share-option-icon share-tiktok">
+                        <i class="fab fa-tiktok"></i>
+                    </div>
+                    <span>TikTok</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="supabaseClient.js"></script>
     <script src="commentaires.js"></script>
     <script>
@@ -1026,6 +1289,9 @@
         let userProfile = null;
         let allArticles = [];
         let isSearching = false;
+        let userReactionsCache = {};
+        let commentCountsCache = {};
+        let currentShareContent = null;
 
         const themeToggle = document.getElementById('theme-toggle');
         const themeIcon = document.getElementById('theme-icon');
@@ -1079,14 +1345,21 @@
                 return;
             }
             isSearching = true;
-            const filteredArticles = allArticles.filter(article => {
-                const text = article.texte?.toLowerCase() || '';
-                const authorName = `${article.users_profile?.prenom} ${article.users_profile?.nom}`.toLowerCase();
-                return text.includes(query) || authorName.includes(query);
+            const filteredContent = allArticles.filter(item => {
+                if (item.type === 'video') {
+                    const titre = item.titre?.toLowerCase() || '';
+                    const description = item.description?.toLowerCase() || '';
+                    const authorName = `${item.users_profile?.prenom} ${item.users_profile?.nom}`.toLowerCase();
+                    return titre.includes(query) || description.includes(query) || authorName.includes(query);
+                } else {
+                    const text = item.texte?.toLowerCase() || '';
+                    const authorName = `${item.users_profile?.prenom} ${item.users_profile?.nom}`.toLowerCase();
+                    return text.includes(query) || authorName.includes(query);
+                }
             });
-            searchResultsCount.textContent = filteredArticles.length;
+            searchResultsCount.textContent = filteredContent.length;
             searchResultsInfo.style.display = 'block';
-            displayArticles(filteredArticles);
+            displayArticles(filteredContent);
             setTimeout(() => {
                 searchPanel.classList.remove('show');
                 searchToggleBtn.classList.remove('active');
@@ -1146,7 +1419,7 @@
                 
                 if (currentUser) {
                     await Promise.all([loadNotificationCount(), loadMessageCount()]);
-                    setupRealtimeSubscriptions(); // MISE À JOUR : Activation du temps réel
+                    setupRealtimeSubscriptions();
                 }
                 
                 await loadArticles();
@@ -1250,41 +1523,124 @@
             }
         }
 
-        async function loadArticles() {
+        async function loadUserReactions() {
+            if (!currentUser) return;
             try {
-                const { data: articles, error } = await supabase
-                    .from('articles')
-                    .select(`*, user_id, users_profile(prenom, nom, role), article_images(image_url)`)
-                    .order('date_created', { ascending: false });
-
+                const { data: reactions, error } = await supabase
+                    .from('article_reactions')
+                    .select('article_id, reaction_type')
+                    .eq('user_id', currentUser.id);
+                
                 if (error) throw error;
-                document.getElementById('loader').style.display = 'none';
-                if (!articles || articles.length === 0) {
-                    document.getElementById('empty-state').style.display = 'block';
-                    return;
-                }
-                allArticles = articles;
-                displayArticles(articles);
+                
+                userReactionsCache = {};
+                reactions?.forEach(r => {
+                    userReactionsCache[r.article_id] = r.reaction_type;
+                });
             } catch (error) {
-                console.error('Erreur de chargement des articles:', error);
-                document.getElementById('loader').innerHTML = '<p style="color: red;">Erreur de chargement des articles</p>';
+                console.error('Erreur chargement réactions articles:', error);
             }
         }
 
-        function displayArticles(articles) {
+        async function loadVideoReactions() {
+            if (!currentUser) return;
+            try {
+                const { data: reactions, error } = await supabase
+                    .from('video_reactions')
+                    .select('video_id, reaction_type')
+                    .eq('user_id', currentUser.id);
+                
+                if (error) throw error;
+                
+                reactions?.forEach(r => {
+                    userReactionsCache[r.video_id] = r.reaction_type;
+                });
+            } catch (error) {
+                console.error('Erreur chargement réactions vidéos:', error);
+            }
+        }
+
+        async function loadCommentCounts() {
+            try {
+                const { data: counts, error } = await supabase
+                    .from('sessions_commentaires')
+                    .select('article_id');
+                
+                if (error) throw error;
+                
+                commentCountsCache = {};
+                counts?.forEach(c => {
+                    commentCountsCache[c.article_id] = (commentCountsCache[c.article_id] || 0) + 1;
+                });
+            } catch (error) {
+                console.error('Erreur chargement compteurs commentaires:', error);
+            }
+        }
+
+        async function loadArticles() {
+            try {
+                const [articlesResult, videosResult] = await Promise.all([
+                    supabase
+                        .from('articles')
+                        .select(`*, user_id, users_profile(prenom, nom, role), article_images(image_url)`)
+                        .order('date_created', { ascending: false }),
+                    supabase
+                        .from('videos')
+                        .select(`*, user_id, users_profile(prenom, nom, role)`)
+                        .order('date_created', { ascending: false })
+                ]);
+
+                if (articlesResult.error) throw articlesResult.error;
+                if (videosResult.error) throw videosResult.error;
+
+                document.getElementById('loader').style.display = 'none';
+
+                const articles = articlesResult.data || [];
+                const videos = videosResult.data || [];
+
+                const combinedContent = [
+                    ...articles.map(a => ({ ...a, type: 'article' })),
+                    ...videos.map(v => ({ ...v, type: 'video' }))
+                ].sort((a, b) => new Date(b.date_created) - new Date(a.date_created));
+
+                if (combinedContent.length === 0) {
+                    document.getElementById('empty-state').style.display = 'block';
+                    return;
+                }
+                
+                allArticles = combinedContent;
+                
+                if (currentUser) {
+                    await loadUserReactions();
+                    await loadVideoReactions();
+                }
+                await loadCommentCounts();
+                
+                displayArticles(combinedContent);
+            } catch (error) {
+                console.error('Erreur de chargement du contenu:', error);
+                document.getElementById('loader').innerHTML = '<p style="color: red;">Erreur de chargement du contenu</p>';
+            }
+        }
+
+        function displayArticles(content) {
             const container = document.getElementById('articles-container');
             container.innerHTML = '';
-            if (articles.length === 0 && isSearching) {
+            if (content.length === 0 && isSearching) {
                 container.innerHTML = `
                     <div class="empty-state">
                         <i class="fas fa-search"></i>
-                        <h3>Aucun article trouvé</h3>
+                        <h3>Aucun contenu trouvé</h3>
                         <p>Essayez avec d'autres mots-clés</p>
                     </div>`;
                 return;
             }
-            articles.forEach(article => {
-                container.appendChild(createArticleCard(article));
+            content.forEach(item => {
+                if (item.type === 'video') {
+                    container.appendChild(createVideoCard(item));
+                } else {
+                    container.appendChild(createArticleCard(item));
+                }
             });
         }
 
@@ -1345,6 +1701,9 @@
                 }
             }
 
+            const userReaction = userReactionsCache[article.article_id];
+            const commentCount = commentCountsCache[article.article_id] || 0;
+
             card.innerHTML = `
                 <div class="article-header">
                     <div class="avatar">${initials}</div>
@@ -1362,18 +1721,259 @@
                     ${linksHTML}
                 </div>
                 <div class="reactions">
-                    <button class="reaction-btn" onclick="handleReaction('${article.article_id}', 'like')"><i class="fas fa-thumbs-up"></i><span>${article.reaction_like || 0}</span></button>
-                    <button class="reaction-btn" onclick="handleReaction('${article.article_id}', 'love')"><i class="fas fa-heart"></i><span>${article.reaction_love || 0}</span></button>
-                    <button class="reaction-btn" onclick="handleReaction('${article.article_id}', 'rire')"><i class="fas fa-laugh"></i><span>${article.reaction_rire || 0}</span></button>
-                    <button class="reaction-btn" onclick="handleReaction('${article.article_id}', 'colere')"><i class="fas fa-angry"></i><span>${article.reaction_colere || 0}</span></button>
+                    <button class="reaction-btn ${userReaction === 'like' ? 'active active-like' : ''}" onclick="handleReaction('${article.article_id}', 'like')">
+                        <i class="fas fa-thumbs-up"></i><span>${article.reaction_like || 0}</span>
+                    </button>
+                    <button class="reaction-btn ${userReaction === 'love' ? 'active active-love' : ''}" onclick="handleReaction('${article.article_id}', 'love')">
+                        <i class="fas fa-heart"></i><span>${article.reaction_love || 0}</span>
+                    </button>
+                    <button class="reaction-btn ${userReaction === 'rire' ? 'active active-rire' : ''}" onclick="handleReaction('${article.article_id}', 'rire')">
+                        <i class="fas fa-laugh"></i><span>${article.reaction_rire || 0}</span>
+                    </button>
+                    <button class="reaction-btn ${userReaction === 'colere' ? 'active active-colere' : ''}" onclick="handleReaction('${article.article_id}', 'colere')">
+                        <i class="fas fa-angry"></i><span>${article.reaction_colere || 0}</span>
+                    </button>
                 </div>
                 <div class="comments-reactions-section">
-                    <div class="comments-toggle-large" onclick="toggleComments('${article.article_id}')"><i class="fas fa-comment"></i><span>Commentaires</span></div>
-                    <div class="user-reactions-btn" onclick="viewUserReactions('${article.article_id}')"><i class="fas fa-user"></i></div>
+                    <div class="comments-toggle-large" onclick="toggleComments('${article.article_id}')">
+                        <i class="fas fa-comment"></i>
+                        <span>Commentaires</span>
+                        ${commentCount > 0 ? `<span class="comment-count-badge">${commentCount}</span>` : ''}
+                    </div>
+                    <div class="user-reactions-btn" onclick="viewUserReactions('${article.article_id}')">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="share-btn" onclick="openShareModal('${article.article_id}', '${encodeURIComponent(article.texte || 'Article')}')">
+                        <i class="fas fa-share-alt"></i>
+                    </div>
                 </div>
                 <div class="comments-section" id="comments-${article.article_id}"></div>`;
             return card;
         }
+
+        function createVideoCard(video) {
+            const card = document.createElement('div');
+            card.className = 'article-card';
+            const author = video.users_profile;
+
+            if (!author) { 
+                return document.createDocumentFragment(); 
+            }
+
+            const initials = `${author.prenom?.[0] || ''}${author.nom?.[0] || ''}`.toUpperCase();
+
+            let adminOptionsHTML = '';
+            if (currentUser && userProfile && video.users_profile) {
+                const myRole = userProfile.role;
+                const isOwner = currentUser.id === video.user_id;
+
+                if (myRole === 'adminpro' || myRole === 'admin' || (myRole === 'user' && isOwner)) {
+                    adminOptionsHTML = `
+                        <div class="admin-options">
+                            <button class="options-btn" onclick="toggleAdminMenu('options-menu-${video.video_id}', event)">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <div class="options-menu" id="options-menu-${video.video_id}">
+                                <a onclick="editVideo('${video.video_id}')"><i class="fas fa-edit"></i> Modifier</a>
+                                <a class="delete" onclick="deleteVideo('${video.video_id}')"><i class="fas fa-trash"></i> Supprimer</a>
+                            </div>
+                        </div>`;
+                }
+            }
+
+            const userReaction = userReactionsCache[video.video_id];
+            const likeCount = video.reaction_like || 0;
+            const loveCount = video.reaction_love || 0;
+            const rireCount = video.reaction_rire || 0;
+            const colereCount = video.reaction_colere || 0;
+
+            card.innerHTML = `
+                <div class="article-header">
+                    <div class="avatar">${initials}</div>
+                    <div class="author-info">
+                        <h3>${author.prenom} ${author.nom}</h3>
+                        <p>${new Date(video.date_created).toLocaleDateString('fr-FR', { 
+                            day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' 
+                        })}</p>
+                    </div>
+                    ${adminOptionsHTML}
+                </div>
+                <div class="article-content">
+                    <div class="article-text" style="font-weight: 600; margin-bottom: 8px;">
+                        <i class="fas fa-video" style="color: #667eea; margin-right: 8px;"></i>${video.titre}
+                    </div>
+                    ${video.description ? `<div class="article-text" style="font-size: 13px; color: var(--text-secondary); margin-bottom: 12px;">${video.description}</div>` : ''}
+                    <div style="position: relative; width: 100%; padding-bottom: 56.25%; background: #000; border-radius: 12px; overflow: hidden;">
+                        <video 
+                            controls 
+                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"
+                            preload="metadata"
+                            playsinline
+                        >
+                            <source src="${video.video_url}" type="video/mp4">
+                            Votre navigateur ne supporte pas la lecture de vidéos.
+                        </video>
+                    </div>
+                </div>
+                <div class="reactions">
+                    <button class="reaction-btn ${userReaction === 'like' ? 'active active-like' : ''}" onclick="handleVideoReaction('${video.video_id}', 'like')">
+                        <i class="fas fa-thumbs-up"></i><span>${likeCount}</span>
+                    </button>
+                    <button class="reaction-btn ${userReaction === 'love' ? 'active active-love' : ''}" onclick="handleVideoReaction('${video.video_id}', 'love')">
+                        <i class="fas fa-heart"></i><span>${loveCount}</span>
+                    </button>
+                    <button class="reaction-btn ${userReaction === 'rire' ? 'active active-rire' : ''}" onclick="handleVideoReaction('${video.video_id}', 'rire')">
+                        <i class="fas fa-laugh"></i><span>${rireCount}</span>
+                    </button>
+                    <button class="reaction-btn ${userReaction === 'colere' ? 'active active-colere' : ''}" onclick="handleVideoReaction('${video.video_id}', 'colere')">
+                        <i class="fas fa-angry"></i><span>${colereCount}</span>
+                    </button>
+                </div>
+                <div class="comments-reactions-section">
+                    <div class="share-btn" onclick="openShareModal('${video.video_id}', '${encodeURIComponent(video.titre)}')" style="flex: 1; border-right: none;">
+                        <i class="fas fa-share-alt"></i>
+                    </div>
+                </div>`;
+            
+            return card;
+        }
+
+        function editVideo(videoId) {
+            window.location.href = `video.html?id=${videoId}`;
+        }
+
+        async function deleteVideo(videoId) {
+            if (confirm("Êtes-vous sûr de vouloir supprimer cette vidéo définitivement ?")) {
+                try {
+                    const { error } = await supabase.from('videos').delete().eq('video_id', videoId);
+                    if (error) throw error;
+                    alert("La vidéo a été supprimée.");
+                    loadArticles();
+                } catch (error) {
+                    console.error("Erreur de suppression:", error);
+                    alert("Une erreur s'est produite lors de la suppression.");
+                }
+            }
+        }
+
+        async function handleVideoReaction(videoId, reactionType) {
+            if (!currentUser) {
+                alert('Connectez-vous pour réagir.');
+                window.location.href = 'connexion.html';
+                return;
+            }
+
+            try {
+                const { data: existing, error } = await supabase
+                    .from('video_reactions')
+                    .select('reaction_id, reaction_type')
+                    .eq('video_id', videoId)
+                    .eq('user_id', currentUser.id)
+                    .maybeSingle();
+
+                if (error) throw error;
+
+                if (existing) {
+                    await supabase.from('video_reactions').delete().eq('reaction_id', existing.reaction_id);
+                    
+                    if (existing.reaction_type !== reactionType) {
+                        await supabase.from('video_reactions').insert({ 
+                            video_id: videoId, 
+                            user_id: currentUser.id, 
+                            reaction_type: reactionType 
+                        });
+                        userReactionsCache[videoId] = reactionType;
+                    } else {
+                        delete userReactionsCache[videoId];
+                    }
+                } else {
+                    await supabase.from('video_reactions').insert({ 
+                        video_id: videoId, 
+                        user_id: currentUser.id, 
+                        reaction_type: reactionType 
+                    });
+                    userReactionsCache[videoId] = reactionType;
+                }
+
+                await loadArticles();
+                
+            } catch (error) {
+                console.error('Erreur de réaction vidéo:', error.message);
+            }
+        }
+
+        window.editVideo = editVideo;
+        window.deleteVideo = deleteVideo;
+        window.handleVideoReaction = handleVideoReaction;
+
+        function openShareModal(articleId, articleText) {
+            const modal = document.getElementById('share-modal');
+            currentShareContent = {
+                id: articleId,
+                text: decodeURIComponent(articleText),
+                url: window.location.origin + '?article=' + articleId
+            };
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeShareModal() {
+            const modal = document.getElementById('share-modal');
+            modal.classList.remove('show');
+            document.body.style.overflow = '';
+            currentShareContent = null;
+        }
+
+        function shareToSocial(platform) {
+            if (!currentShareContent) return;
+
+            const text = currentShareContent.text.substring(0, 100) + '...';
+            const url = currentShareContent.url;
+
+            if (navigator.share && platform !== 'facebook') {
+                const shareData = {
+                    title: 'Market - Article',
+                    text: text,
+                    url: url
+                };
+
+                const intentUrls = {
+                    whatsapp: `whatsapp://send?text=${encodeURIComponent(text + ' ' + url)}`,
+                    telegram: `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`,
+                    messenger: `fb-messenger://share?link=${encodeURIComponent(url)}`,
+                    instagram: shareData,
+                    tiktok: shareData
+                };
+
+                if (platform === 'whatsapp' || platform === 'telegram' || platform === 'messenger') {
+                    window.location.href = intentUrls[platform];
+                } else {
+                    navigator.share(shareData).catch(err => {
+                        console.log('Partage annulé ou non supporté:', err);
+                    });
+                }
+            } else if (platform === 'facebook') {
+                window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank');
+            } else {
+                const fallbackUrls = {
+                    whatsapp: `https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`,
+                    telegram: `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`,
+                    messenger: `https://www.facebook.com/dialog/send?link=${encodeURIComponent(url)}&app_id=YOUR_APP_ID`,
+                    instagram: url,
+                    tiktok: url
+                };
+                
+                window.open(fallbackUrls[platform] || url, '_blank');
+            }
+
+            closeShareModal();
+        }
+
+        document.getElementById('share-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeShareModal();
+            }
+        });
 
         function toggleAdminMenu(menuId, event) {
             event.stopPropagation();
@@ -1413,6 +2013,10 @@
                 window.location.href = 'connexion.html';
                 return;
             }
+
+            const reactionBtn = event.currentTarget;
+            const wasActive = userReactionsCache[articleId] === reactionType;
+
             try {
                 const { data: existing, error } = await supabase
                     .from('article_reactions')
@@ -1425,15 +2029,87 @@
 
                 if (existing) {
                     await supabase.from('article_reactions').delete().eq('reaction_id', existing.reaction_id);
+                    
                     if (existing.reaction_type !== reactionType) {
-                        await supabase.from('article_reactions').insert({ article_id: articleId, user_id: currentUser.id, reaction_type: reactionType });
+                        await supabase.from('article_reactions').insert({ 
+                            article_id: articleId, 
+                            user_id: currentUser.id, 
+                            reaction_type: reactionType 
+                        });
+                        userReactionsCache[articleId] = reactionType;
+                    } else {
+                        delete userReactionsCache[articleId];
                     }
                 } else {
-                    await supabase.from('article_reactions').insert({ article_id: articleId, user_id: currentUser.id, reaction_type: reactionType });
+                    await supabase.from('article_reactions').insert({ 
+                        article_id: articleId, 
+                        user_id: currentUser.id, 
+                        reaction_type: reactionType 
+                    });
+                    userReactionsCache[articleId] = reactionType;
                 }
-                loadArticles();
+
+                await updateArticleReactionCounts(articleId);
+                
             } catch (error) {
                 console.error('Erreur de réaction:', error.message);
+            }
+        }
+
+        async function updateArticleReactionCounts(articleId) {
+            try {
+                const { data: counts, error } = await supabase
+                    .from('article_reactions')
+                    .select('reaction_type')
+                    .eq('article_id', articleId);
+
+                if (error) throw error;
+
+                const reactionCounts = {
+                    like: 0,
+                    love: 0,
+                    rire: 0,
+                    colere: 0
+                };
+
+                counts?.forEach(r => {
+                    reactionCounts[r.reaction_type]++;
+                });
+
+                const articleCard = document.querySelector(`[data-article-id="${articleId}"]`) || 
+                                   document.querySelector(`#comments-${articleId}`)?.closest('.article-card');
+                
+                if (articleCard) {
+                    const reactionBtns = articleCard.querySelectorAll('.reaction-btn');
+                    const userReaction = userReactionsCache[articleId];
+
+                    reactionBtns.forEach((btn, index) => {
+                        const types = ['like', 'love', 'rire', 'colere'];
+                        const type = types[index];
+                        const span = btn.querySelector('span');
+                        
+                        if (span) {
+                            span.textContent = reactionCounts[type];
+                        }
+
+                        btn.classList.remove('active', 'active-like', 'active-love', 'active-rire', 'active-colere');
+                        
+                        if (userReaction === type) {
+                            btn.classList.add('active', `active-${type}`);
+                        }
+                    });
+                }
+
+                const article = allArticles.find(a => a.article_id === articleId);
+                if (article) {
+                    article.reaction_like = reactionCounts.like;
+                    article.reaction_love = reactionCounts.love;
+                    article.reaction_rire = reactionCounts.rire;
+                    article.reaction_colere = reactionCounts.colere;
+                }
+
+            } catch (error) {
+                console.error('Erreur mise à jour compteurs:', error);
             }
         }
 
@@ -1450,8 +2126,14 @@
         async function loadComments(articleId, container) {
             container.innerHTML = '<div class="loader"><div class="spinner"></div></div>';
             try {
-                const { data: comments, error } = await supabase.from('sessions_commentaires').select(`*, users_profile(prenom, nom)`).eq('article_id', articleId).order('date_created', { ascending: false });
+                const { data: comments, error } = await supabase
+                    .from('sessions_commentaires')
+                    .select(`*, users_profile(prenom, nom)`)
+                    .eq('article_id', articleId)
+                    .order('date_created', { ascending: false });
+                
                 if (error) throw error;
+                
                 if (window.CommentsWidget) {
                     window.CommentsWidget.render(container, articleId, comments, currentUser, userProfile);
                 } else {
@@ -1467,6 +2149,9 @@
             window.location.href = `usereact.html?article_id=${articleId}`;
         }
         
+        window.openShareModal = openShareModal;
+        window.closeShareModal = closeShareModal;
+        window.shareToSocial = shareToSocial;
         window.viewUserReactions = viewUserReactions;
         window.toggleAdminMenu = toggleAdminMenu;
         window.editArticle = editArticle;
@@ -1477,8 +2162,14 @@
         async function loadNotificationCount() {
             if (!currentUser) return;
             try {
-                const { count, error } = await supabase.from('notifications').select('*', { count: 'exact', head: true }).eq('user_id', currentUser.id).eq('read_status', false);
+                const { count, error } = await supabase
+                    .from('notifications')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('user_id', currentUser.id)
+                    .eq('read_status', false);
+                
                 if (error) throw error;
+                
                 const badge = document.getElementById('notif-badge');
                 if (count > 0) {
                     badge.textContent = count > 9 ? '9+' : count;
@@ -1494,8 +2185,14 @@
         async function loadMessageCount() {
             if (!currentUser) return;
             try {
-                const { count, error } = await supabase.from('messages').select('*', { count: 'exact', head: true }).eq('receiver_id', currentUser.id).eq('read_status', false);
+                const { count, error } = await supabase
+                    .from('messages')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('receiver_id', currentUser.id)
+                    .eq('read_status', false);
+                
                 if (error) throw error;
+                
                 const badge = document.getElementById('message-badge');
                 if (count > 0) {
                     badge.textContent = count > 9 ? '9+' : count;
@@ -1508,42 +2205,165 @@
             }
         }
 
-        // =====================================================================
-        // MISE À JOUR : Remplacement de setInterval par le Temps Réel
-        // =====================================================================
         function setupRealtimeSubscriptions() {
             if (!currentUser) return;
 
-            // Abonnement aux nouvelles notifications
             const notificationChannel = supabase.channel(`public:notifications:user_id=eq.${currentUser.id}`)
                 .on(
                     'postgres_changes',
-                    { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${currentUser.id}` },
+                    { 
+                        event: '*', 
+                        schema: 'public', 
+                        table: 'notifications', 
+                        filter: `user_id=eq.${currentUser.id}` 
+                    },
                     (payload) => {
                         console.log('Changement notification reçu!', payload);
-                        loadNotificationCount(); // Met à jour le compteur
+                        loadNotificationCount();
                     }
                 )
                 .subscribe();
 
-            // Abonnement aux nouveaux messages
             const messageChannel = supabase.channel(`public:messages:receiver_id=eq.${currentUser.id}`)
                 .on(
                     'postgres_changes',
-                    { event: 'INSERT', schema: 'public', table: 'messages', filter: `receiver_id=eq.${currentUser.id}` },
+                    { 
+                        event: 'INSERT', 
+                        schema: 'public', 
+                        table: 'messages', 
+                        filter: `receiver_id=eq.${currentUser.id}` 
+                    },
                     (payload) => {
                         console.log('Nouveau message reçu!', payload);
-                        loadMessageCount(); // Met à jour le compteur
+                        loadMessageCount();
+                    }
+                )
+                .subscribe();
+
+            const articlesChannel = supabase.channel('public:articles')
+                .on(
+                    'postgres_changes',
+                    { 
+                        event: '*', 
+                        schema: 'public', 
+                        table: 'articles'
+                    },
+                    (payload) => {
+                        console.log('Changement article détecté!', payload);
+                        if (payload.eventType === 'INSERT') {
+                            loadArticles();
+                        } else if (payload.eventType === 'DELETE') {
+                            const deletedId = payload.old.article_id;
+                            allArticles = allArticles.filter(a => a.article_id !== deletedId);
+                            displayArticles(allArticles);
+                        } else if (payload.eventType === 'UPDATE') {
+                            loadArticles();
+                        }
+                    }
+                )
+                .subscribe();
+
+            const reactionsChannel = supabase.channel('public:article_reactions')
+                .on(
+                    'postgres_changes',
+                    { 
+                        event: '*', 
+                        schema: 'public', 
+                        table: 'article_reactions'
+                    },
+                    (payload) => {
+                        console.log('Changement réaction détecté!', payload);
+                        const articleId = payload.new?.article_id || payload.old?.article_id;
+                        if (articleId) {
+                            updateArticleReactionCounts(articleId);
+                        }
+                    }
+                )
+                .subscribe();
+
+            const commentsChannel = supabase.channel('public:sessions_commentaires')
+                .on(
+                    'postgres_changes',
+                    { 
+                        event: '*', 
+                        schema: 'public', 
+                        table: 'sessions_commentaires'
+                    },
+                    async (payload) => {
+                        console.log('Changement commentaire détecté!', payload);
+                        await loadCommentCounts();
+                        
+                        const articleId = payload.new?.article_id || payload.old?.article_id;
+                        if (articleId) {
+                            const commentSection = document.getElementById(`comments-${articleId}`);
+                            if (commentSection && commentSection.classList.contains('show')) {
+                                loadComments(articleId, commentSection);
+                            }
+                            
+                            const articleCard = commentSection?.closest('.article-card');
+                            if (articleCard) {
+                                const commentToggle = articleCard.querySelector('.comments-toggle-large');
+                                const count = commentCountsCache[articleId] || 0;
+                                
+                                const existingBadge = commentToggle.querySelector('.comment-count-badge');
+                                if (count > 0) {
+                                    if (existingBadge) {
+                                        existingBadge.textContent = count;
+                                    } else {
+                                        const badge = document.createElement('span');
+                                        badge.className = 'comment-count-badge';
+                                        badge.textContent = count;
+                                        commentToggle.appendChild(badge);
+                                    }
+                                } else if (existingBadge) {
+                                    existingBadge.remove();
+                                }
+                            }
+                        }
                     }
                 )
                 .subscribe();
                 
-            // Nettoyage des abonnements à la déconnexion
+            const videosChannel = supabase.channel('public:videos')
+                .on(
+                    'postgres_changes',
+                    { 
+                        event: '*', 
+                        schema: 'public', 
+                        table: 'videos'
+                    },
+                    (payload) => {
+                        console.log('Changement vidéo détecté!', payload);
+                        loadArticles();
+                    }
+                )
+                .subscribe();
+
+            const videoReactionsChannel = supabase.channel('public:video_reactions')
+                .on(
+                    'postgres_changes',
+                    { 
+                        event: '*', 
+                        schema: 'public', 
+                        table: 'video_reactions'
+                    },
+                    (payload) => {
+                        console.log('Changement réaction vidéo détecté!', payload);
+                        loadArticles();
+                    }
+                )
+                .subscribe();
+                
             document.getElementById('logout-item').addEventListener('click', () => {
                 supabase.removeChannel(notificationChannel);
                 supabase.removeChannel(messageChannel);
+                supabase.removeChannel(articlesChannel);
+                supabase.removeChannel(reactionsChannel);
+                supabase.removeChannel(commentsChannel);
+                supabase.removeChannel(videosChannel);
+                supabase.removeChannel(videoReactionsChannel);
             });
         }
     </script>
 </body>
-</html>
+    </html>
