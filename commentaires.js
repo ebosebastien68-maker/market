@@ -435,5 +435,3 @@ window.CommentsWidget = {
       .replace(/'/g, '&#039;');
   }
 };
-
-console.log('✅ Widget de commentaires chargé (Articles & Vidéos v2.0)');
