@@ -12,7 +12,6 @@
         
         .messages-wrapper { height: 100vh; display: flex; flex-direction: column; }
         
-        /* Header */
         .messages-header { background: white; padding: 15px 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); display: flex; justify-content: space-between; align-items: center; z-index: 100; }
         .messages-header h1 { color: #333; font-size: 20px; display: flex; align-items: center; gap: 10px; }
         .messages-header h1 i { color: #667eea; }
@@ -22,10 +21,8 @@
         .action-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4); }
         .action-btn.secondary { background: #f0f0f0; color: #667eea; }
         
-        /* Container principal */
         .messages-container { flex: 1; overflow: hidden; background: white; margin: 15px; border-radius: 15px; box-shadow: 0 2px 15px rgba(0,0,0,0.08); display: flex; flex-direction: column; position: relative; }
         
-        /* Zone de chat principale */
         .chat-area { flex: 1; display: flex; flex-direction: column; min-height: 0; }
         
         .chat-header { padding: 15px 20px; border-bottom: 1px solid #e0e0e0; display: flex; align-items: center; gap: 12px; background: #fafbfc; flex-shrink: 0; }
@@ -36,25 +33,44 @@
         
         .chat-messages { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 20px; display: flex; flex-direction: column; gap: 12px; background: #f5f7fa; min-height: 0; }
         
-        .message-bubble { max-width: 75%; padding: 12px 16px; border-radius: 18px; word-wrap: break-word; animation: slideIn 0.3s ease; }
+        .message-bubble { max-width: 75%; padding: 12px 16px; border-radius: 18px; word-wrap: break-word; animation: slideIn 0.3s ease; position: relative; }
         @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
         .message-sent { align-self: flex-end; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-bottom-right-radius: 4px; }
         .message-received { align-self: flex-start; background: white; color: #333; border-bottom-left-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
         .message-text { margin-bottom: 5px; line-height: 1.4; font-size: 14px; }
-        .message-time { font-size: 10px; opacity: 0.7; }
+        .message-time { font-size: 10px; opacity: 0.7; display: flex; align-items: center; gap: 4px; }
         .message-image { max-width: 100%; max-height: 250px; border-radius: 12px; margin-top: 8px; cursor: pointer; }
+        
+        /* Statuts de message */
+        .message-status { display: inline-flex; align-items: center; gap: 2px; margin-left: 4px; }
+        .message-status i { font-size: 12px; }
+        .status-pending { opacity: 0.5; }
+        .status-sent { opacity: 0.7; }
+        .status-delivered { opacity: 0.9; }
+        .status-read { color: #4CAF50; opacity: 1; }
+        
+        /* Message en attente (hors ligne) */
+        .message-pending { opacity: 0.6; position: relative; }
+        .message-pending::after { content: ''; position: absolute; top: 50%; left: -10px; transform: translateY(-50%); width: 4px; height: 4px; background: orange; border-radius: 50%; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        
+        /* Indicateur "en train d'écrire" */
+        .typing-indicator { align-self: flex-start; background: white; padding: 12px 16px; border-radius: 18px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); display: none; animation: slideIn 0.3s ease; }
+        .typing-indicator.show { display: block; }
+        .typing-dots { display: flex; gap: 4px; }
+        .typing-dots span { width: 8px; height: 8px; background: #999; border-radius: 50%; animation: typing 1.4s infinite; }
+        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typing { 0%, 60%, 100% { transform: translateY(0); opacity: 0.7; } 30% { transform: translateY(-10px); opacity: 1; } }
         
         .chat-input-area { padding: 15px 20px; border-top: 1px solid #e0e0e0; display: flex; gap: 10px; align-items: center; background: white; flex-shrink: 0; }
         .attach-btn { background: #f0f0f0; border: none; color: #667eea; width: 40px; height: 40px; border-radius: 50%; font-size: 18px; cursor: pointer; transition: all 0.3s; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
         .attach-btn:hover { background: #e0e0e0; transform: scale(1.05); }
         
         .input-wrapper { flex: 1; position: relative; display: flex; align-items: center; }
-        .message-input { width: 100%; padding: 12px 45px 12px 18px; border: 2px solid #e0e0e0; border-radius: 25px; font-size: 14px; font-family: inherit; transition: border-color 0.3s; }
+        .message-input { width: 100%; padding: 12px 18px; border: 2px solid #e0e0e0; border-radius: 25px; font-size: 14px; font-family: inherit; transition: border-color 0.3s; }
         .message-input:focus { outline: none; border-color: #667eea; }
-        
-        .input-send-icon { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-size: 20px; color: #667eea; cursor: pointer; transition: color 0.3s, transform 0.2s; display: none; }
-        .input-send-icon:hover { color: #764ba2; transform: translateY(-50%) scale(1.1); }
         
         .send-btn { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 16px; flex-shrink: 0; transition: all 0.3s; display: flex; align-items: center; justify-content: center; }
         .send-btn:hover { transform: scale(1.1); box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4); }
@@ -62,12 +78,18 @@
         .send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .send-btn:disabled:hover { transform: none; box-shadow: none; }
         
+        /* Indicateur de connexion */
+        .connection-status { position: fixed; top: 70px; right: 20px; background: #ff9800; color: white; padding: 8px 16px; border-radius: 20px; font-size: 12px; display: none; align-items: center; gap: 8px; z-index: 1000; animation: slideDown 0.3s ease; }
+        @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .connection-status.offline { display: flex; }
+        .connection-status i { animation: spin 2s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        
         .empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #999; background: #f5f7fa; text-align: center; padding: 20px;}
         .empty-state i { font-size: 60px; margin-bottom: 15px; color: #ddd; }
         .empty-state h3 { font-size: 16px; color: #666; margin-bottom: 8px; }
         .empty-state p { font-size: 13px; }
         
-        /* Modal conversations/contacts */
         .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
         .modal.show { display: flex; }
         .modal-content { background: white; border-radius: 20px; width: 95%; max-width: 450px; max-height: 85vh; overflow: hidden; display: flex; flex-direction: column; animation: modalSlide 0.3s ease; }
@@ -110,6 +132,12 @@
     </style>
 </head>
 <body>
+    <!-- Indicateur de connexion -->
+    <div class="connection-status" id="connection-status">
+        <i class="fas fa-sync-alt"></i>
+        <span>Reconnexion en cours...</span>
+    </div>
+
     <div class="messages-wrapper">
         <div class="messages-header">
             <h1><i class="fas fa-comments"></i> <span id="header-title">Messagerie</span></h1>
@@ -126,8 +154,7 @@
         </div>
 
         <div class="messages-container">
-            <div class="chat-area" id="chat-area">
-                </div>
+            <div class="chat-area" id="chat-area"></div>
         </div>
     </div>
 
@@ -163,8 +190,12 @@
         let currentUser = null;
         let currentChatUser = null;
         let messageSubscription = null;
+        let typingSubscription = null;
         let conversationsCache = [];
         let contactsCache = [];
+        let pendingMessages = []; // Queue pour messages hors-ligne
+        let isOnline = navigator.onLine;
+        let typingTimeout = null;
 
         window.addEventListener('DOMContentLoaded', async () => {
             currentUser = await getCurrentUser();
@@ -173,12 +204,117 @@
                 return;
             }
             await initInterface();
+            setupNetworkListeners();
+            setupTypingDetection();
 
             document.getElementById('search-conversations').addEventListener('input', (e) => filterList('conversations', e.target.value));
             document.getElementById('search-contacts').addEventListener('input', (e) => filterList('contacts', e.target.value));
         });
 
-        // MISE À JOUR : Interface unifiée pour tous les utilisateurs
+        // ========================================
+        // GESTION RÉSEAU
+        // ========================================
+        function setupNetworkListeners() {
+            window.addEventListener('online', () => {
+                isOnline = true;
+                document.getElementById('connection-status').classList.remove('offline');
+                processPendingMessages();
+            });
+
+            window.addEventListener('offline', () => {
+                isOnline = false;
+                document.getElementById('connection-status').classList.add('offline');
+            });
+        }
+
+        async function processPendingMessages() {
+            if (pendingMessages.length === 0) return;
+            
+            const toSend = [...pendingMessages];
+            pendingMessages = [];
+            
+            for (const msg of toSend) {
+                try {
+                    await sendMessageToServer(msg.texte, msg.imageUrl, msg.clientId);
+                } catch (error) {
+                    console.error('Échec renvoi message:', error);
+                    pendingMessages.push(msg);
+                }
+            }
+        }
+
+        // ========================================
+        // DÉTECTION "EN TRAIN D'ÉCRIRE"
+        // ========================================
+        function setupTypingDetection() {
+            const input = document.getElementById('message-input');
+            if (!input) return;
+
+            input.addEventListener('input', () => {
+                if (!currentChatUser) return;
+                
+                clearTimeout(typingTimeout);
+                updateTypingStatus(true);
+                
+                typingTimeout = setTimeout(() => {
+                    updateTypingStatus(false);
+                }, 2000);
+            });
+        }
+
+        async function updateTypingStatus(isTyping) {
+            if (!currentChatUser) return;
+            
+            try {
+                await supabase.from('typing_status').upsert({
+                    user_id: currentUser.id,
+                    chat_with_user_id: currentChatUser.user_id,
+                    is_typing: isTyping,
+                    last_updated: new Date().toISOString()
+                }, {
+                    onConflict: 'user_id,chat_with_user_id'
+                });
+            } catch (error) {
+                console.error('Erreur typing status:', error);
+            }
+        }
+
+        function subscribeToTypingStatus() {
+            if (!currentChatUser) return;
+            
+            if (typingSubscription) {
+                supabase.removeChannel(typingSubscription);
+            }
+
+            typingSubscription = supabase.channel(`typing:${currentChatUser.user_id}`)
+                .on('postgres_changes', {
+                    event: '*',
+                    schema: 'public',
+                    table: 'typing_status',
+                    filter: `user_id=eq.${currentChatUser.user_id}`
+                }, (payload) => {
+                    if (payload.new && payload.new.chat_with_user_id === currentUser.id) {
+                        showTypingIndicator(payload.new.is_typing);
+                    }
+                })
+                .subscribe();
+        }
+
+        function showTypingIndicator(show) {
+            const indicator = document.getElementById('typing-indicator');
+            if (!indicator) return;
+            
+            if (show) {
+                indicator.classList.add('show');
+                scrollToBottom();
+            } else {
+                indicator.classList.remove('show');
+            }
+        }
+
+        // ========================================
+        // INTERFACE INITIALE
+        // ========================================
         async function initInterface() {
             await loadConversations();
             
@@ -197,7 +333,7 @@
             try {
                 const { data: messages, error } = await supabase
                     .from('messages')
-                    .select('sender_id, receiver_id, texte, image_url, date_created, read_status')
+                    .select('sender_id, receiver_id, texte, image_url, date_created, delivery_status')
                     .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`)
                     .order('date_created', { ascending: false });
 
@@ -228,7 +364,7 @@
                             unread: 0
                         });
                     }
-                    if (conversations.has(otherId) && msg.receiver_id === currentUser.id && !msg.read_status) {
+                    if (conversations.has(otherId) && msg.receiver_id === currentUser.id && msg.delivery_status !== 'read') {
                         conversations.get(otherId).unread++;
                     }
                 });
@@ -288,7 +424,6 @@
         
         async function loadContacts() {
             try {
-                // MISE À JOUR : Charge tous les utilisateurs sauf soi-même
                 const { data, error } = await supabase
                     .from('users_profile')
                     .select('user_id, prenom, nom, role')
@@ -356,6 +491,9 @@
             else displayContacts(filtered);
         }
 
+        // ========================================
+        // OUVERTURE CHAT ET CHARGEMENT MESSAGES
+        // ========================================
         async function openChat(user) {
             if (currentChatUser && currentChatUser.user_id === user.user_id) return;
             currentChatUser = user;
@@ -369,7 +507,15 @@
                         <p>${user.role}</p>
                     </div>
                 </div>
-                <div class="chat-messages" id="chat-messages"></div>
+                <div class="chat-messages" id="chat-messages">
+                    <div class="typing-indicator" id="typing-indicator">
+                        <div class="typing-dots">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    </div>
+                </div>
                 <div class="chat-input-area">
                     <input type="file" id="image-input" accept="image/*" style="display: none;" onchange="handleImageSelect(event)">
                     <button class="attach-btn" title="Joindre une image" onclick="document.getElementById('image-input').click()"><i class="fas fa-paperclip"></i></button>
@@ -380,28 +526,39 @@
                 </div>
             `;
 
-            document.getElementById('message-input').addEventListener('input', updateSendButtonState);
+            document.getElementById('message-input').addEventListener('input', () => {
+                updateSendButtonState();
+                setupTypingDetection();
+            });
             updateSendButtonState();
 
             await loadMessages(user.user_id);
             await markMessagesAsRead(user.user_id);
             subscribeToMessages(user.user_id);
+            subscribeToTypingStatus();
         }
 
         async function loadMessages(otherUserId) {
             const container = document.getElementById('chat-messages');
             if (!container) return;
+            
+            const typingIndicator = container.querySelector('#typing-indicator');
             container.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i></div>';
 
             try {
                 const { data, error } = await supabase
                     .from('messages')
-                    .select('sender_id, texte, image_url, date_created')
+                    .select('message_id, sender_id, texte, image_url, date_created, delivery_status, client_id')
                     .or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${currentUser.id})`)
                     .order('date_created', { ascending: true });
 
                 if (error) throw error;
                 displayMessages(data);
+                
+                // Réinsérer l'indicateur de typing
+                if (typingIndicator) {
+                    container.appendChild(typingIndicator);
+                }
             } catch (error) {
                 console.error('Erreur chargement messages:', error);
                 container.innerHTML = '<p style="text-align:center;color:#999;">Erreur de chargement</p>';
@@ -412,19 +569,61 @@
             const container = document.getElementById('chat-messages');
             if (!container) return;
             
+            const typingIndicator = container.querySelector('#typing-indicator');
+            
             container.innerHTML = messages.map(msg => {
                 const isSent = msg.sender_id === currentUser.id;
+                const isPending = msg.delivery_status === 'pending';
+                
                 let content = '';
                 if (msg.texte) content += `<div class="message-text">${escapeHtml(msg.texte)}</div>`;
                 if (msg.image_url) content += `<img src="${msg.image_url}" class="message-image" onclick="window.open('${msg.image_url}', '_blank')">`;
-                content += `<div class="message-time">${formatTime(msg.date_created)}</div>`;
                 
-                return `<div class="message-bubble ${isSent ? 'message-sent' : 'message-received'}">${content}</div>`;
+                let statusIcon = '';
+                if (isSent) {
+                    statusIcon = getStatusIcon(msg.delivery_status);
+                }
+                
+                content += `<div class="message-time">${formatTime(msg.date_created)}${statusIcon}</div>`;
+                
+                return `<div class="message-bubble ${isSent ? 'message-sent' : 'message-received'} ${isPending ? 'message-pending' : ''}" data-message-id="${msg.message_id}" data-client-id="${msg.client_id || ''}">${content}</div>`;
             }).join('');
             
-            container.scrollTop = container.scrollHeight;
+            // Réinsérer l'indicateur de typing
+            if (typingIndicator) {
+                container.appendChild(typingIndicator);
+            }
+            
+            scrollToBottom();
         }
 
+        function getStatusIcon(status) {
+            switch(status) {
+                case 'pending':
+                    return '<span class="message-status status-pending"><i class="fas fa-clock"></i></span>';
+                case 'sent':
+                    return '<span class="message-status status-sent"><i class="fas fa-check"></i></span>';
+                case 'delivered':
+                    return '<span class="message-status status-delivered"><i class="fas fa-check-double"></i></span>';
+                case 'read':
+                    return '<span class="message-status status-read"><i class="fas fa-check-double"></i></span>';
+                default:
+                    return '';
+            }
+        }
+
+        function scrollToBottom() {
+            const container = document.getElementById('chat-messages');
+            if (container) {
+                setTimeout(() => {
+                    container.scrollTop = container.scrollHeight;
+                }, 100);
+            }
+        }
+
+        // ========================================
+        // ENVOI DE MESSAGES (AVEC GESTION HORS-LIGNE)
+        // ========================================
         async function sendMessage(imageFile = null) {
             const input = document.getElementById('message-input');
             const sendBtn = document.getElementById('send-btn');
@@ -432,9 +631,27 @@
 
             if (!texte && !imageFile) return;
 
+            const clientId = generateClientId();
+
             if (sendBtn) {
                 sendBtn.disabled = true;
                 sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            }
+
+            // Afficher immédiatement le message localement
+            addMessageToUI({
+                message_id: clientId,
+                client_id: clientId,
+                sender_id: currentUser.id,
+                texte: texte || null,
+                image_url: null,
+                date_created: new Date().toISOString(),
+                delivery_status: isOnline ? 'sent' : 'pending'
+            });
+
+            if (input) {
+                input.value = '';
+                input.focus();
             }
 
             try {
@@ -447,20 +664,18 @@
                     imageUrl = data.publicUrl;
                 }
 
-                await supabase.from('messages').insert({
-                    sender_id: currentUser.id,
-                    receiver_id: currentChatUser.user_id,
-                    texte: texte || null,
-                    image_url: imageUrl
-                });
-
-                if (input) {
-                    input.value = '';
-                    input.focus();
+                if (isOnline) {
+                    await sendMessageToServer(texte, imageUrl, clientId);
+                } else {
+                    // Ajouter à la queue hors-ligne
+                    pendingMessages.push({ texte, imageUrl, clientId });
                 }
             } catch (error) {
                 console.error('Erreur envoi message:', error);
-                alert('Erreur lors de l\'envoi du message');
+                updateMessageStatus(clientId, 'pending');
+                if (isOnline) {
+                    alert('Erreur lors de l\'envoi du message');
+                }
             } finally {
                 if (sendBtn) {
                     sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i>';
@@ -468,38 +683,156 @@
                 }
             }
         }
-        
-        // ... Autres fonctions utilitaires (updateSendButtonState, markMessagesAsRead, subscribeToMessages, showEmptyState, etc.) ...
-        
+
+        async function sendMessageToServer(texte, imageUrl, clientId) {
+            const { data, error } = await supabase.from('messages').insert({
+                sender_id: currentUser.id,
+                receiver_id: currentChatUser.user_id,
+                texte: texte || null,
+                image_url: imageUrl,
+                client_id: clientId,
+                delivery_status: 'sent'
+            }).select();
+
+            if (error) throw error;
+            
+            // Mettre à jour l'UI avec l'ID réel du serveur
+            if (data && data[0]) {
+                updateMessageInUI(clientId, data[0]);
+            }
+        }
+
+        function generateClientId() {
+            return `client_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        }
+
+        function addMessageToUI(message) {
+            const container = document.getElementById('chat-messages');
+            if (!container) return;
+
+            const isSent = message.sender_id === currentUser.id;
+            const isPending = message.delivery_status === 'pending';
+            
+            let content = '';
+            if (message.texte) content += `<div class="message-text">${escapeHtml(message.texte)}</div>`;
+            if (message.image_url) content += `<img src="${message.image_url}" class="message-image" onclick="window.open('${message.image_url}', '_blank')">`;
+            
+            let statusIcon = '';
+            if (isSent) {
+                statusIcon = getStatusIcon(message.delivery_status);
+            }
+            
+            content += `<div class="message-time">${formatTime(message.date_created)}${statusIcon}</div>`;
+            
+            const messageElement = document.createElement('div');
+            messageElement.className = `message-bubble ${isSent ? 'message-sent' : 'message-received'} ${isPending ? 'message-pending' : ''}`;
+            messageElement.setAttribute('data-message-id', message.message_id);
+            messageElement.setAttribute('data-client-id', message.client_id || '');
+            messageElement.innerHTML = content;
+            
+            // Insérer avant l'indicateur de typing
+            const typingIndicator = container.querySelector('#typing-indicator');
+            if (typingIndicator) {
+                container.insertBefore(messageElement, typingIndicator);
+            } else {
+                container.appendChild(messageElement);
+            }
+            
+            scrollToBottom();
+        }
+
+        function updateMessageInUI(clientId, serverMessage) {
+            const messageElement = document.querySelector(`[data-client-id="${clientId}"]`);
+            if (messageElement) {
+                messageElement.setAttribute('data-message-id', serverMessage.message_id);
+                messageElement.classList.remove('message-pending');
+                
+                // Mettre à jour le statut
+                const statusElement = messageElement.querySelector('.message-status');
+                if (statusElement) {
+                    statusElement.outerHTML = getStatusIcon(serverMessage.delivery_status);
+                }
+            }
+        }
+
+        function updateMessageStatus(messageId, newStatus) {
+            const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
+            if (!messageElement) return;
+            
+            const statusElement = messageElement.querySelector('.message-status');
+            if (statusElement) {
+                statusElement.outerHTML = getStatusIcon(newStatus);
+            }
+            
+            if (newStatus === 'pending') {
+                messageElement.classList.add('message-pending');
+            } else {
+                messageElement.classList.remove('message-pending');
+            }
+        }
+
+        // ========================================
+        // SUBSCRIPTION TEMPS RÉEL
+        // ========================================
+        function subscribeToMessages(otherUserId) {
+            if (messageSubscription) {
+                supabase.removeChannel(messageSubscription);
+            }
+
+            messageSubscription = supabase.channel(`messages:chat_with_${otherUserId}`)
+                .on('postgres_changes', {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'messages',
+                    filter: `sender_id=eq.${otherUserId}`
+                }, (payload) => {
+                    if (payload.new.receiver_id === currentUser.id) {
+                        addMessageToUI(payload.new);
+                        markMessagesAsRead(otherUserId);
+                        loadConversations();
+                    }
+                })
+                .on('postgres_changes', {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'messages'
+                }, (payload) => {
+                    // Mise à jour du statut (delivered/read)
+                    if (payload.new.sender_id === currentUser.id) {
+                        updateMessageStatus(payload.new.message_id, payload.new.delivery_status);
+                    }
+                })
+                .subscribe();
+        }
+
+        async function markMessagesAsRead(otherUserId) {
+            try {
+                await supabase.from('messages')
+                    .update({ 
+                        delivery_status: 'read',
+                        read_status: true,
+                        read_at: new Date().toISOString()
+                    })
+                    .eq('sender_id', otherUserId)
+                    .eq('receiver_id', currentUser.id)
+                    .in('delivery_status', ['sent', 'delivered']);
+
+                const conv = conversationsCache.find(c => c.user.user_id === otherUserId);
+                if (conv) conv.unread = 0;
+            } catch (error) {
+                console.error('Erreur marquage lu:', error);
+            }
+        }
+
+        // ========================================
+        // UTILITAIRES
+        // ========================================
         function updateSendButtonState() {
             const input = document.getElementById('message-input');
             const sendBtn = document.getElementById('send-btn');
             if (!input || !sendBtn) return;
             const hasText = input.value.trim().length > 0;
             sendBtn.disabled = !hasText;
-        }
-
-        async function markMessagesAsRead(otherUserId) {
-            try {
-                await supabase.from('messages').update({ read_status: true }).eq('sender_id', otherUserId).eq('receiver_id', currentUser.id);
-                const conv = conversationsCache.find(c => c.user.user_id === otherUserId);
-                if (conv) conv.unread = 0;
-            } catch (error) {
-                console.error('Erreur:', error);
-            }
-        }
-
-        function subscribeToMessages(otherUserId) {
-            if (messageSubscription) supabase.removeChannel(messageSubscription);
-            messageSubscription = supabase.channel(`public:messages:chat_with_${otherUserId}`)
-                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
-                    const msg = payload.new;
-                    if ((msg.sender_id === otherUserId && msg.receiver_id === currentUser.id) ||
-                        (msg.sender_id === currentUser.id && msg.receiver_id === otherUserId)) {
-                        loadMessages(otherUserId);
-                        loadConversations(); 
-                    }
-                }).subscribe();
         }
 
         function showEmptyState(title, subtitle = '') {
@@ -525,7 +858,10 @@
         function handleImageSelect(event) {
             const file = event.target.files[0];
             if (file) {
-                if (file.size > 5 * 1024 * 1024) { alert('L\'image est trop volumineuse (max 5MB)'); return; }
+                if (file.size > 5 * 1024 * 1024) { 
+                    alert('L\'image est trop volumineuse (max 5MB)'); 
+                    return; 
+                }
                 sendMessage(file);
             }
             event.target.value = null;
@@ -539,18 +875,25 @@
         }
         
         function escapeHtml(text) {
+            if (!text) return '';
             return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
 
-        function closeModal(modalId) { document.getElementById(modalId).classList.remove('show'); }
+        function closeModal(modalId) { 
+            document.getElementById(modalId).classList.remove('show'); 
+        }
+        
         document.querySelectorAll('.modal').forEach(modal => {
-            modal.addEventListener('click', function(e) { if (e.target === this) closeModal(this.id); });
+            modal.addEventListener('click', function(e) { 
+                if (e.target === this) closeModal(this.id); 
+            });
         });
         
         window.addEventListener('beforeunload', () => {
             if (messageSubscription) supabase.removeChannel(messageSubscription);
+            if (typingSubscription) supabase.removeChannel(typingSubscription);
         });
 
     </script>
 </body>
-</html>
+    </html>
