@@ -1,10 +1,3 @@
-// =====================================================================
-// videreact.js - Module d'affichage des réactions v1.0
-// Affiche une modale avec le bilan et la liste des réactions
-// Date : 13/10/2025
-// Auteur : Market App (via Gemini)
-// =====================================================================
-
 window.VideoReactions = {
   
   init() {
