@@ -1,169 +1,285 @@
-window.VideoReactions = {
-  
-  init() {
-    if (document.getElementById('video-reactions-styles')) return;
-    const style = document.createElement('style');
-    style.id = 'video-reactions-styles';
-    style.innerHTML = `
-      .reactions-modal-backdrop {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0, 0, 0, 0.6); z-index: 2000;
-        display: flex; align-items: center; justify-content: center;
-        opacity: 0; transition: opacity 0.3s ease;
-      }
-      .reactions-modal-backdrop.show { opacity: 1; }
-      .reactions-modal-content {
-        background: var(--bg-secondary); color: var(--text-primary);
-        width: 90%; max-width: 500px; max-height: 80vh;
-        border-radius: 16px; box-shadow: var(--shadow-lg);
-        display: flex; flex-direction: column;
-        transform: scale(0.95); transition: transform 0.3s ease;
-      }
-      .reactions-modal-backdrop.show .reactions-modal-content { transform: scale(1); }
-      .reactions-modal-header {
-        padding: 16px 24px; border-bottom: 1px solid var(--border-color);
-        display: flex; justify-content: space-between; align-items: center;
-      }
-      .reactions-modal-header h3 { font-size: 18px; margin: 0; }
-      .reactions-modal-close {
-        background: none; border: none; font-size: 24px; cursor: pointer;
-        color: var(--text-tertiary); transition: color 0.2s;
-      }
-      .reactions-modal-close:hover { color: var(--text-primary); }
-      .reactions-modal-summary {
-        padding: 20px 24px; display: flex; justify-content: space-around;
-        background: var(--bg-primary); border-bottom: 1px solid var(--border-color);
-      }
-      .summary-item { text-align: center; }
-      .summary-item i { font-size: 20px; }
-      .summary-item .count { font-size: 18px; font-weight: 700; margin-top: 5px; }
-      .like-color { color: #3b82f6; }
-      .love-color { color: #ef4444; }
-      .rire-color { color: #f59e0b; }
-      .colere-color { color: #dc2626; }
-      .reactions-modal-list { padding: 8px 24px; overflow-y: auto; }
-      .reaction-user-item {
-        display: flex; align-items: center; gap: 12px; padding: 12px 0;
-        border-bottom: 1px solid var(--border-color);
-      }
-      .reaction-user-item:last-child { border-bottom: none; }
-      .reaction-user-item .user-name { flex: 1; font-weight: 500; }
-      .reaction-user-item .user-reaction { font-size: 20px; }
-    `;
-    document.head.appendChild(style);
-  },
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Réactions sur la Vidéo</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ============================================
+           VARIABLES DE DESIGN & THÈME
+        ============================================ */
+        :root {
+            --bg-primary: #f8f9fa;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-tertiary: #868e96;
+            --border-color: #dee2e6;
+            --accent-primary: #667eea;
+            --accent-secondary: #764ba2;
+            --accent-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+            --shadow-lg: 0 8px 24px rgba(0,0,0,0.15);
+            --transition-base: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
 
-  async show(videoId) {
-    this.init();
-    
-    // Créer la structure de la modale
-    const backdrop = document.createElement('div');
-    backdrop.className = 'reactions-modal-backdrop';
-    backdrop.innerHTML = `
-      <div class="reactions-modal-content">
-        <div class="reactions-modal-header">
-          <h3>Réactions</h3>
-          <button class="reactions-modal-close">&times;</button>
-        </div>
-        <div class="reactions-modal-body">
-          <div class="loader" style="padding: 50px;"><div class="spinner"></div></div>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(backdrop);
-    
-    // Afficher la modale avec une transition
-    setTimeout(() => backdrop.classList.add('show'), 10);
-    
-    // Gérer la fermeture
-    backdrop.querySelector('.reactions-modal-close').addEventListener('click', () => this.hide());
-    backdrop.addEventListener('click', (e) => {
-      if (e.target === backdrop) this.hide();
-    });
+        body.dark-mode {
+            --bg-primary: #121212;
+            --bg-secondary: #1e1e1e;
+            --bg-tertiary: #2a2a2a;
+            --text-primary: #e9ecef;
+            --text-secondary: #ced4da;
+            --text-tertiary: #adb5bd;
+            --border-color: #343a40;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.4);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.5);
+            --shadow-lg: 0 8px 24px rgba(0,0,0,0.6);
+        }
 
-    // Charger les données
-    try {
-      const { data, error } = await window.supabaseClient.supabase
-        .from('video_reactions')
-        .select(`reaction_type, users_profile(prenom, nom)`)
-        .eq('video_id', videoId);
-      
-      if (error) throw error;
-      this.renderData(data);
+        /* ============================================
+           STYLES DE BASE
+        ============================================ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    } catch (err) {
-      console.error("Erreur de chargement des réactions:", err);
-      backdrop.querySelector('.reactions-modal-body').innerHTML = `<p style="text-align:center; padding: 40px;">Erreur de chargement des données.</p>`;
-    }
-  },
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            padding: 24px;
+            transition: var(--transition-base);
+        }
 
-  renderData(reactions) {
-    const body = document.querySelector('.reactions-modal-body');
-    if (!body) return;
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        /* ============================================
+           HEADER & BOUTON RETOUR
+        ============================================ */
+        .header {
+            background: var(--bg-secondary);
+            padding: 20px 24px;
+            border-radius: 16px;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid var(--border-color);
+        }
 
-    if (reactions.length === 0) {
-      body.innerHTML = `<p style="text-align:center; padding: 40px; color: var(--text-tertiary);">Aucune réaction pour cette vidéo.</p>`;
-      return;
-    }
-    
-    // 1. Faire le bilan
-    const counts = { like: 0, love: 0, rire: 0, colere: 0 };
-    reactions.forEach(r => {
-      if (counts[r.reaction_type] !== undefined) {
-        counts[r.reaction_type]++;
-      }
-    });
+        .header h1 {
+            font-size: 22px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
 
-    // 2. Créer le HTML
-    const summaryHTML = `
-      <div class="reactions-modal-summary">
-        <div class="summary-item">
-          <i class="fas fa-thumbs-up like-color"></i>
-          <div class="count like-color">${counts.like}</div>
-        </div>
-        <div class="summary-item">
-          <i class="fas fa-heart love-color"></i>
-          <div class="count love-color">${counts.love}</div>
-        </div>
-        <div class="summary-item">
-          <i class="fas fa-laugh rire-color"></i>
-          <div class="count rire-color">${counts.rire}</div>
-        </div>
-        <div class="summary-item">
-          <i class="fas fa-angry colere-color"></i>
-          <div class="count colere-color">${counts.colere}</div>
-        </div>
-      </div>
-    `;
+        .back-btn {
+            background: var(--accent-gradient);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: var(--transition-base);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
 
-    const reactionIcons = {
-        like: '<i class="fas fa-thumbs-up like-color"></i>',
-        love: '<i class="fas fa-heart love-color"></i>',
-        rire: '<i class="fas fa-laugh rire-color"></i>',
-        colere: '<i class="fas fa-angry colere-color"></i>'
-    };
-    
-    const listHTML = reactions.map(r => {
-      const profile = r.users_profile || { prenom: 'Utilisateur', nom: 'Inconnu' };
-      const name = `${profile.prenom} ${profile.nom}`;
-      return `
-        <div class="reaction-user-item">
-          <span class="user-name">${name}</span>
-          <span class="user-reaction">${reactionIcons[r.reaction_type] || ''}</span>
-        </div>
-      `;
-    }).join('');
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.5);
+        }
+        
+        /* ============================================
+           CARTE INFO VIDÉO
+        ============================================ */
+        .video-info-header {
+            background: var(--bg-secondary);
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 24px;
+            border: 1px solid var(--border-color);
+        }
 
-    body.innerHTML = summaryHTML + `<div class="reactions-modal-list">${listHTML}</div>`;
-  },
-  
-  hide() {
-    const backdrop = document.querySelector('.reactions-modal-backdrop');
-    if (backdrop) {
-      backdrop.classList.remove('show');
-      backdrop.addEventListener('transitionend', () => backdrop.remove(), { once: true });
-    }
-  }
-};
+        .video-mini-card { display: flex; flex-direction: column; gap: 15px; }
+        .video-mini-author { display: flex; align-items: center; gap: 12px; }
 
-console.log('%c✅ Module de réactions vidéo v1.0 chargé', 'color: #22c55e; font-weight: bold;');
+        .avatar-mini {
+            width: 48px; height: 48px; border-radius: 50%;
+            background: var(--accent-gradient);
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: 700; font-size: 16px;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .video-mini-author h4 { font-size: 16px; margin-bottom: 4px; color: var(--text-primary); }
+        .video-mini-author p { font-size: 13px; color: var(--text-tertiary); }
+        .video-mini-details { padding: 12px; background: var(--bg-primary); border-radius: 10px; border-left: 3px solid var(--accent-primary); }
+        .video-mini-details h5 { font-size: 15px; margin-bottom: 6px; color: var(--text-primary); }
+        .video-mini-details p { font-size: 14px; line-height: 1.6; color: var(--text-secondary); }
+
+        /* ============================================
+           RÉSUMÉ & STATS
+        ============================================ */
+        .reactions-summary {
+            background: var(--bg-secondary); padding: 20px; border-radius: 16px;
+            box-shadow: var(--shadow-sm); margin-bottom: 24px; border: 1px solid var(--border-color);
+        }
+        .reactions-summary h3 { font-size: 18px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; color: var(--text-primary); }
+        .reactions-summary h3 i { color: var(--accent-primary); }
+        .reactions-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; }
+
+        .reaction-stat {
+            background: var(--bg-primary); padding: 16px; border-radius: 12px;
+            display: flex; align-items: center; gap: 12px; transition: var(--transition-base);
+        }
+        .reaction-stat:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+        .reaction-stat i { font-size: 24px; }
+        .stat-info { display: flex; flex-direction: column; }
+        .stat-label { font-size: 13px; color: var(--text-secondary); font-weight: 600; }
+        .stat-count { font-size: 22px; color: var(--text-primary); font-weight: 700; }
+
+        /* ============================================
+           ONGLETS DE FILTRE
+        ============================================ */
+        .reactions-tabs {
+            background: var(--bg-secondary); padding: 8px; border-radius: 12px;
+            box-shadow: var(--shadow-sm); margin-bottom: 24px; border: 1px solid var(--border-color);
+            display: flex; gap: 8px; overflow-x: auto;
+        }
+        .tab-btn {
+            background: transparent; border: none; padding: 10px 18px; border-radius: 8px;
+            cursor: pointer; display: flex; align-items: center; gap: 8px;
+            font-size: 14px; font-weight: 600; color: var(--text-secondary);
+            transition: var(--transition-base); white-space: nowrap; flex-shrink: 0;
+        }
+        .tab-btn:hover { background: var(--bg-tertiary); color: var(--accent-primary); }
+        .tab-btn.active { background: var(--accent-gradient); color: white; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); }
+
+        /* ============================================
+           LISTE DES RÉACTIONS
+        ============================================ */
+        .reactions-list {
+            display: flex; flex-direction: column; gap: 12px;
+        }
+        .reaction-item {
+            background: var(--bg-secondary); padding: 16px; border-radius: 12px;
+            display: flex; justify-content: space-between; align-items: center;
+            transition: var(--transition-base); border: 1px solid var(--border-color);
+            opacity: 0; transform: translateY(20px);
+            animation: fadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+        .reaction-item:hover { transform: scale(1.02); box-shadow: var(--shadow-md); border-color: var(--accent-primary); }
+        
+        .reaction-user-info { display: flex; align-items: center; gap: 12px; flex: 1; }
+        .avatar {
+            width: 45px; height: 45px; border-radius: 50%;
+            background: var(--accent-gradient);
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: 700; font-size: 16px;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4); flex-shrink: 0;
+        }
+        .user-details h4 { font-size: 15px; margin-bottom: 3px; color: var(--text-primary); }
+        .user-details p { font-size: 12px; color: var(--text-tertiary); }
+
+        .reaction-badges-container { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+        .reaction-badge {
+            padding: 6px 12px; border-radius: 20px; color: white;
+            font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 6px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            transition: var(--transition-base);
+        }
+        .reaction-badge:hover { transform: scale(1.05); }
+        .reaction-badge span { display: none; } /* Cacher le texte par défaut */
+        
+        /* Afficher le texte sur les écrans plus larges pour plus de clarté */
+        @media (min-width: 768px) {
+            .reaction-badge span { display: inline; }
+        }
+
+        /* ============================================
+           ÉTATS (CHARGEMENT, VIDE)
+        ============================================ */
+        .loader { text-align: center; padding: 60px 20px; }
+        .spinner {
+            border: 4px solid var(--bg-tertiary);
+            border-top-color: var(--accent-primary);
+            border-radius: 50%; width: 40px; height: 40px;
+            animation: spin 0.8s linear infinite; margin: 0 auto 16px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .empty-state {
+            text-align: center; padding: 80px 20px; color: var(--text-tertiary);
+            background: var(--bg-secondary); border-radius: 16px;
+        }
+        .empty-state i { font-size: 64px; margin-bottom: 20px; opacity: 0.3; }
+        .empty-state h3 { font-size: 20px; margin-bottom: 8px; font-weight: 600; color: var(--text-primary); }
+
+        .empty-state-small { text-align: center; padding: 40px 20px; color: var(--text-tertiary); }
+
+        /* ============================================
+           RESPONSIVE
+        ============================================ */
+        @media (max-width: 768px) {
+            body { padding: 16px; }
+            .header { flex-direction: column; gap: 16px; text-align: center; }
+            .header h1 { font-size: 20px; }
+            .back-btn { width: 100%; justify-content: center; }
+            .reactions-stats { grid-template-columns: repeat(2, 1fr); }
+            .reaction-item { flex-direction: column; align-items: center; gap: 16px; text-align: center; }
+            .reaction-badges-container { justify-content: center; }
+            .reaction-user-info { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1><i class="fas fa-video"></i> Réactions sur la Vidéo</h1>
+            <button class="back-btn" onclick="window.history.back()">
+                <i class="fas fa-arrow-left"></i> Retour
+            </button>
+        </header>
+
+        <main id="video-reactions-container">
+            <div class="loader">
+                <div class="spinner"></div>
+                <p>Chargement des réactions...</p>
+            </div>
+        </main>
+    </div>
+
+    <script src="supabaseClient.js"></script>
+    <script src="videreact.js"></script>
+    <script>
+        // Synchroniser le thème avec la page principale
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        if (savedTheme === 'dark') {
+            document.body.classList.add('dark-mode');
+        }
+    </script>
+</body>
+</html>
