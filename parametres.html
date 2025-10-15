@@ -1,197 +1,846 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Gestion du compte</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-  <style>
-    * {
-      box-sizing: border-box;
-      font-family: 'Poppins', sans-serif;
-    }
-    body {
-      margin: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      background: linear-gradient(135deg, #0b132b, #1c2541);
-      color: #fff;
-    }
-    .card {
-      background: #1f4068;
-      border-radius: 20px;
-      padding: 30px;
-      width: 380px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-      animation: pop 0.6s ease;
-    }
-    @keyframes pop {
-      from { transform: scale(0.9); opacity: 0; }
-      to { transform: scale(1); opacity: 1; }
-    }
-    h2 {
-      text-align: center;
-      margin-bottom: 20px;
-      color: gold;
-      letter-spacing: 1px;
-    }
-    label {
-      font-weight: 600;
-      display: block;
-      margin-top: 15px;
-      margin-bottom: 5px;
-    }
-    input {
-      width: 100%;
-      padding: 10px;
-      border-radius: 10px;
-      border: none;
-      outline: none;
-      margin-bottom: 10px;
-      background: #16213e;
-      color: white;
-    }
-    button {
-      width: 100%;
-      padding: 10px;
-      border: none;
-      border-radius: 10px;
-      background: linear-gradient(90deg, #e0a800, #ffdd00);
-      color: #000;
-      font-weight: 600;
-      cursor: pointer;
-      transition: 0.3s;
-      margin-top: 10px;
-    }
-    button:hover {
-      background: linear-gradient(90deg, #ffdd00, #e0a800);
-      transform: scale(1.02);
-    }
-    .danger {
-      background: linear-gradient(90deg, #ff4e00, #ec9f05);
-      color: #fff;
-    }
-    .danger:hover {
-      background: linear-gradient(90deg, #ec9f05, #ff4e00);
-    }
-    .message {
-      margin-top: 15px;
-      text-align: center;
-      font-size: 0.9rem;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paramètres - Market</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #141414;
+            --bg-tertiary: #1f1f1f;
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --text-tertiary: #707070;
+            --border-color: #2a2a2a;
+            --danger-primary: #dc2626;
+            --danger-secondary: #991b1b;
+            --danger-gradient: linear-gradient(135deg, #dc2626 0%, #7f1d1d 100%);
+            --warning-primary: #f59e0b;
+            --accent-primary: #8b5cf6;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.5);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.6);
+            --shadow-lg: 0 8px 24px rgba(0,0,0,0.7);
+            --shadow-xl: 0 12px 32px rgba(220, 38, 38, 0.3);
+            --shadow-glow: 0 0 20px rgba(220, 38, 38, 0.5);
+            --transition-base: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* ANIMATED BACKGROUND */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(220, 38, 38, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(220, 38, 38, 0.05) 0%, transparent 50%);
+            animation: backgroundPulse 10s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes backgroundPulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        /* GLITCH EFFECT */
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+            100% { transform: translate(0); }
+        }
+
+        /* HEADER DARK */
+        .header {
+            position: relative;
+            padding: 40px 20px;
+            text-align: center;
+            background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+            border-bottom: 2px solid var(--danger-primary);
+            box-shadow: var(--shadow-lg);
+            z-index: 1;
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--danger-gradient);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 44px;
+            height: 44px;
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition-base);
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+
+        .back-btn:hover {
+            background: var(--danger-primary);
+            border-color: var(--danger-primary);
+            box-shadow: var(--shadow-glow);
+            transform: translateX(-4px);
+        }
+
+        .header-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            color: var(--danger-primary);
+            animation: float 3s ease-in-out infinite;
+            filter: drop-shadow(0 0 10px var(--danger-primary));
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .header-title {
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            background: var(--danger-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -1px;
+            animation: slideInDown 0.6s ease;
+        }
+
+        @keyframes slideInDown {
+            0% { transform: translateY(-30px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+
+        .header-subtitle {
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 500;
+            animation: fadeIn 0.8s ease 0.2s both;
+        }
+
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        /* CONTAINER */
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 32px 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* DANGER ZONE CARD */
+        .section-card {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            margin-bottom: 24px;
+            border: 2px solid var(--border-color);
+            overflow: hidden;
+            transition: var(--transition-base);
+            animation: scaleIn 0.5s ease both;
+        }
+
+        @keyframes scaleIn {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .section-card.danger {
+            border-color: var(--danger-primary);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .section-card.danger:hover {
+            box-shadow: var(--shadow-glow);
+            transform: translateY(-2px);
+        }
+
+        .section-header {
+            padding: 20px;
+            background: var(--bg-tertiary);
+            border-bottom: 2px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-card.danger .section-header {
+            background: linear-gradient(135deg, rgba(220, 38, 38, 0.2) 0%, rgba(127, 29, 29, 0.2) 100%);
+            border-bottom-color: var(--danger-primary);
+        }
+
+        .section-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--danger-gradient);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .section-body {
+            padding: 24px 20px;
+        }
+
+        /* FORM GROUPS */
+        .form-group {
+            margin-bottom: 24px;
+            animation: fadeInUp 0.6s ease both;
+        }
+
+        .form-group:nth-child(1) { animation-delay: 0.1s; }
+        .form-group:nth-child(2) { animation-delay: 0.2s; }
+        .form-group:nth-child(3) { animation-delay: 0.3s; }
+
+        @keyframes fadeInUp {
+            0% { transform: translateY(20px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--bg-primary);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 15px;
+            transition: var(--transition-base);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
+        }
+
+        .form-input:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* BUTTONS */
+        .btn {
+            padding: 14px 24px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: var(--transition-base);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .btn-primary {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #7c3aed;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(139, 92, 246, 0.4);
+        }
+
+        .btn-danger {
+            background: var(--danger-gradient);
+            color: white;
+            animation: dangerPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes dangerPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); }
+            50% { box-shadow: 0 0 20px 10px rgba(220, 38, 38, 0); }
+        }
+
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #991b1b 0%, #7f1d1d 100%);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-glow);
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0) translateY(-2px); }
+            25% { transform: translateX(-5px) translateY(-2px); }
+            75% { transform: translateX(5px) translateY(-2px); }
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 2px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-primary);
+            border-color: var(--accent-primary);
+        }
+
+        /* MODAL HORROR */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal {
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            max-width: 500px;
+            width: 100%;
+            border: 3px solid var(--danger-primary);
+            box-shadow: var(--shadow-glow);
+            animation: modalSlideIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            overflow: hidden;
+        }
+
+        @keyframes modalSlideIn {
+            0% { transform: scale(0.5) rotate(-5deg); opacity: 0; }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+
+        .modal-header {
+            padding: 24px;
+            background: var(--danger-gradient);
+            text-align: center;
+            border-bottom: 3px solid var(--danger-secondary);
+        }
+
+        .modal-icon {
+            font-size: 64px;
+            color: white;
+            margin-bottom: 16px;
+            animation: iconBounce 0.8s ease infinite;
+            filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.5));
+        }
+
+        @keyframes iconBounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .modal-subtitle {
+            color: rgba(255,255,255,0.9);
+            font-size: 14px;
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .modal-message {
+            color: var(--text-primary);
+            font-size: 15px;
+            line-height: 1.6;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        /* ALERT POPUP (Surprise) */
+        .alert-popup {
+            position: fixed;
+            top: -200px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-secondary);
+            border: 3px solid var(--danger-primary);
+            border-radius: 16px;
+            padding: 20px;
+            min-width: 320px;
+            max-width: 90%;
+            box-shadow: var(--shadow-glow);
+            z-index: 2000;
+            transition: top 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .alert-popup.show {
+            top: 20px;
+            animation: alertShake 0.5s ease;
+        }
+
+        @keyframes alertShake {
+            0%, 100% { transform: translateX(-50%) rotate(0deg); }
+            25% { transform: translateX(-50%) rotate(-3deg); }
+            75% { transform: translateX(-50%) rotate(3deg); }
+        }
+
+        .alert-content {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .alert-icon {
+            font-size: 32px;
+            color: var(--danger-primary);
+            animation: alertIconPulse 1s ease-in-out infinite;
+        }
+
+        @keyframes alertIconPulse {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 5px var(--danger-primary)); }
+            50% { transform: scale(1.2); filter: drop-shadow(0 0 15px var(--danger-primary)); }
+        }
+
+        .alert-text {
+            flex: 1;
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        .alert-close {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 4px;
+            transition: var(--transition-base);
+        }
+
+        .alert-close:hover {
+            color: var(--danger-primary);
+            transform: rotate(90deg);
+        }
+
+        /* CODE INPUT */
+        .code-input-group {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin: 24px 0;
+        }
+
+        .code-digit {
+            width: 50px;
+            height: 60px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: 700;
+            background: var(--bg-primary);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            color: var(--text-primary);
+            transition: var(--transition-base);
+        }
+
+        .code-digit:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.2);
+            transform: scale(1.1);
+        }
+
+        /* WARNING BANNER */
+        .warning-banner {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(217, 119, 6, 0.2) 100%);
+            border: 2px solid var(--warning-primary);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: warningPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes warningPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+            50% { box-shadow: 0 0 20px 5px rgba(245, 158, 11, 0); }
+        }
+
+        .warning-icon {
+            font-size: 24px;
+            color: var(--warning-primary);
+        }
+
+        .warning-text {
+            color: var(--text-primary);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* LOADER */
+        .loader {
+            display: none;
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--border-color);
+            border-top-color: var(--danger-primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loader.show {
+            display: block;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .container {
+                padding: 24px 16px;
+            }
+
+            .modal {
+                margin: 0 16px;
+            }
+
+            .code-digit {
+                width: 45px;
+                height: 55px;
+                font-size: 20px;
+            }
+        }
+    </style>
 </head>
 <body>
+    <!-- HEADER -->
+    <div class="header">
+        <a href="profil.html" class="back-btn">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <div class="header-icon">
+            <i class="fas fa-skull-crossbones"></i>
+        </div>
+        <h1 class="header-title">Zone Dangereuse</h1>
+        <p class="header-subtitle">Modifications irréversibles - Procédez avec prudence</p>
+    </div>
 
-  <div class="card">
-    <h2>Gestion du compte</h2>
+    <!-- CONTAINER -->
+    <div class="container">
+        <!-- PROFILE UPDATE SECTION -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-icon">
+                    <i class="fas fa-user-edit"></i>
+                </div>
+                <h2 class="section-title">Modifier le Profil</h2>
+            </div>
+            <div class="section-body">
+                <div class="warning-banner">
+                    <i class="fas fa-exclamation-triangle warning-icon"></i>
+                    <div class="warning-text">
+                        Un code de vérification sera envoyé à votre email actuel pour confirmer toute modification.
+                    </div>
+                </div>
 
-    <label for="newName">Nouveau nom de profil</label>
-    <input type="text" id="newName" placeholder="Entrez le nouveau nom..." />
+                <form id="profileForm">
+                    <div class="form-group">
+                        <label class="form-label">Prénom</label>
+                        <input type="text" id="prenomInput" class="form-input" placeholder="Votre prénom">
+                    </div>
 
-    <label for="password">Mot de passe actuel</label>
-    <input type="password" id="password" placeholder="Confirmez votre mot de passe..." />
+                    <div class="form-group">
+                        <label class="form-label">Nom</label>
+                        <input type="text" id="nomInput" class="form-input" placeholder="Votre nom">
+                    </div>
 
-    <button id="updateNameBtn">Modifier le nom</button>
-    <button id="deleteAccountBtn" class="danger">Supprimer le compte</button>
+                    <div class="form-group">
+                        <label class="form-label">Adresse Email</label>
+                        <input type="email" id="emailInput" class="form-input" placeholder="votre@email.com">
+                    </div>
 
-    <div class="message" id="message"></div>
-  </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-shield-alt"></i>
+                        Demander une Vérification
+                    </button>
+                </form>
+            </div>
+        </div>
 
-  <script type="module">
-    import { supabase } from './supabaseClient.js'
+        <!-- DELETE ACCOUNT SECTION -->
+        <div class="section-card danger">
+            <div class="section-header">
+                <div class="section-icon">
+                    <i class="fas fa-trash-alt"></i>
+                </div>
+                <h2 class="section-title">Supprimer le Compte</h2>
+            </div>
+            <div class="section-body">
+                <div class="warning-banner">
+                    <i class="fas fa-skull warning-icon"></i>
+                    <div class="warning-text">
+                        <strong>ATTENTION :</strong> Cette action est IRRÉVERSIBLE. Toutes vos données seront définitivement supprimées.
+                    </div>
+                </div>
 
-    const updateNameBtn = document.getElementById('updateNameBtn')
-    const deleteAccountBtn = document.getElementById('deleteAccountBtn')
-    const passwordInput = document.getElementById('password')
-    const nameInput = document.getElementById('newName')
-    const message = document.getElementById('message')
+                <button id="deleteAccountBtn" class="btn btn-danger">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Supprimer Définitivement mon Compte
+                </button>
+            </div>
+        </div>
+    </div>
 
-    // Affichage de message
-    const showMessage = (text, color = 'gold') => {
-      message.style.color = color
-      message.textContent = text
-    }
+    <!-- VERIFICATION MODAL -->
+    <div id="verificationModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-icon">
+                    <i class="fas fa-shield-halved"></i>
+                </div>
+                <h3 class="modal-title">Vérification Requise</h3>
+                <p class="modal-subtitle">Code envoyé par email</p>
+            </div>
+            <div class="modal-body">
+                <p class="modal-message">
+                    Un code de vérification à 6 chiffres a été envoyé à votre adresse email. 
+                    Veuillez le saisir ci-dessous pour confirmer cette action.
+                </p>
 
-    // Vérifie si l'utilisateur est connecté
-    async function checkSession() {
-      const session = (await supabase.auth.getSession()).data.session
-      if (!session) {
-        showMessage("Aucun utilisateur connecté. Redirection...", "red")
-        setTimeout(() => window.location.href = 'index.html', 3000)
-        return null
-      }
-      return session.user
-    }
+                <div class="code-input-group" id="codeInputs">
+                    <input type="text" maxlength="1" class="code-digit" data-index="0">
+                    <input type="text" maxlength="1" class="code-digit" data-index="1">
+                    <input type="text" maxlength="1" class="code-digit" data-index="2">
+                    <input type="text" maxlength="1" class="code-digit" data-index="3">
+                    <input type="text" maxlength="1" class="code-digit" data-index="4">
+                    <input type="text" maxlength="1" class="code-digit" data-index="5">
+                </div>
 
-    // Vérifie le mot de passe avant action
-    async function verifyPassword(password) {
-      const session = (await supabase.auth.getSession()).data.session
-      const email = session?.user?.email
-      if (!email) return null
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-      if (error) {
-        showMessage("Mot de passe invalide.", "red")
-        return null
-      }
-      return data.user
-    }
+                <div class="loader" id="modalLoader"></div>
 
-    // Modifier le nom
-    updateNameBtn.addEventListener('click', async () => {
-      const newName = nameInput.value.trim()
-      const password = passwordInput.value.trim()
-      if (!newName || !password) return showMessage("Remplissez tous les champs.", "red")
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" style="flex: 1;" id="cancelBtn">
+                        <i class="fas fa-times"></i> Annuler
+                    </button>
+                    <button class="btn btn-primary" style="flex: 2;" id="verifyBtn">
+                        <i class="fas fa-check"></i> Vérifier
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-      const currentUser = await checkSession()
-      if (!currentUser) return
+    <!-- DELETE CONFIRMATION MODAL -->
+    <div id="deleteModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <h3 class="modal-title">Dernière Chance</h3>
+                <p class="modal-subtitle">Cette action est irréversible</p>
+            </div>
+            <div class="modal-body">
+                <p class="modal-message" style="color: var(--danger-primary); font-weight: 700;">
+                    ⚠️ Vous êtes sur le point de SUPPRIMER DÉFINITIVEMENT votre compte.<br><br>
+                    • Tous vos articles seront supprimés<br>
+                    • Tous vos commentaires seront supprimés<br>
+                    • Toutes vos réactions seront supprimées<br>
+                    • Cette action ne peut PAS être annulée<br><br>
+                    Êtes-vous ABSOLUMENT sûr(e) ?
+                </p>
 
-      const user = await verifyPassword(password)
-      if (!user) return
+                <div class="loader" id="deleteLoader"></div>
 
-      const { error } = await supabase
-        .from('users_profile')
-        .update({ nom: newName })
-        .eq('user_id', user.id)
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" style="flex: 1;" id="cancelDeleteBtn">
+                        <i class="fas fa-shield"></i> Non, Annuler
+                    </button>
+                    <button class="btn btn-danger" style="flex: 1;" id="confirmDeleteBtn">
+                        <i class="fas fa-skull"></i> Oui, Supprimer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-      if (error) showMessage("Erreur lors de la mise à jour.", "red")
-      else showMessage("Nom modifié avec succès 🎉", "lime")
-    })
+    <!-- ALERT POPUP -->
+    <div id="alertPopup" class="alert-popup">
+        <div class="alert-content">
+            <i class="fas fa-exclamation-circle alert-icon"></i>
+            <div class="alert-text" id="alertText"></div>
+            <button class="alert-close" onclick="hideAlert()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
 
-    // Supprimer le compte
-    deleteAccountBtn.addEventListener('click', async () => {
-      const password = passwordInput.value.trim()
-      if (!password) return showMessage("Entrez votre mot de passe.", "red")
+    <!-- SCRIPTS -->
+    <script src="supabaseClient.js"></script>
+    <script>
+        const { supabase, getCurrentUser, getUserProfile } = window.supabaseClient;
+        let currentUser = null;
+        let userProfile = null;
+        let verificationCode = null;
+        let pendingAction = null;
+        let pendingData = null;
 
-      const currentUser = await checkSession()
-      if (!currentUser) return
+        // INIT
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                currentUser = await getCurrentUser();
+                if (!currentUser) {
+                    window.location.href = 'connexion.html';
+                    return;
+                }
 
-      const user = await verifyPassword(password)
-      if (!user) return
+                userProfile = await getUserProfile(currentUser.id);
+                if (!userProfile) {
+                    window.location.href = 'connexion.html';
+                    return;
+                }
 
-      const { error: profileErr } = await supabase
-        .from('users_profile')
-        .delete()
-        .eq('user_id', user.id)
+                loadUserData();
+                setupEventListeners();
+                showAlert('⚠️ Zone dangereuse chargée. Soyez prudent avec vos actions.', 'warning');
+            } catch (error) {
+                console.error('Erreur initialisation:', error);
+                window.location.href = 'connexion.html';
+            }
+        });
 
-      const { error: authErr } = await supabase.auth.admin.deleteUser(user.id)
+        function loadUserData() {
+            document.getElementById('prenomInput').value = userProfile.prenom || '';
+            document.getElementById('nomInput').value = userProfile.nom || '';
+            document.getElementById('emailInput').value = currentUser.email || '';
+        }
 
-      if (profileErr || authErr) {
-        showMessage("Erreur lors de la suppression du compte.", "red")
-      } else {
-        showMessage("Compte supprimé avec succès. Déconnexion...", "lime")
-        setTimeout(() => {
-          supabase.auth.signOut()
-          window.location.href = 'index.html'
-        }, 2500)
-      }
-    })
+        function setupEventListeners() {
+            // Profile form submit
+            document.getElementById('profileForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await handleProfileUpdate();
+            });
 
-    // Vérification automatique à l’ouverture
-    checkSession()
-  </script>
+            // Delete account
+            document.getElementById('deleteAccountBtn').addEventListener('click', () => {
+                showDeleteModal();
+            });
 
-</body>
-</html>
+            // Modal actions
+            document.getElementById('cancelBtn').addEventListener('click', hideVerificationModal);
+            document.getElementById('verifyBtn').addEventListener('click', handleVerification);
+            document.getElementById('cancelDeleteBtn').addEventListener('click', hideDeleteModal);
+            document.getElementById('confirmDeleteBtn').addEventListener('click', handleDeleteRequest);
+
+            // Code inputs
+            setupCodeInputs();
+        }
+
+        function setupCodeInputs() {
+            const inputs = document.querySelectorAll('.code-digit');
+            inputs.forEach((input, index) => {
+                input.addEventListener('input', (e) => {
+                    if (e.target.value.length === 1 && index < inputs.length - 1) {
+                        inputs[index + 1].focus();
+                    }
