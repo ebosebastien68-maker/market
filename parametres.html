@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gestion du compte</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+    body {
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0b132b, #1c2541);
+      color: #fff;
+    }
+    .card {
+      background: #1f4068;
+      border-radius: 20px;
+      padding: 30px;
+      width: 380px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+      animation: pop 0.6s ease;
+    }
+    @keyframes pop {
+      from { transform: scale(0.9); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: gold;
+      letter-spacing: 1px;
+    }
+    label {
+      font-weight: 600;
+      display: block;
+      margin-top: 15px;
+      margin-bottom: 5px;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      border-radius: 10px;
+      border: none;
+      outline: none;
+      margin-bottom: 10px;
+      background: #16213e;
+      color: white;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(90deg, #e0a800, #ffdd00);
+      color: #000;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.3s;
+      margin-top: 10px;
+    }
+    button:hover {
+      background: linear-gradient(90deg, #ffdd00, #e0a800);
+      transform: scale(1.02);
+    }
+    .danger {
+      background: linear-gradient(90deg, #ff4e00, #ec9f05);
+      color: #fff;
+    }
+    .danger:hover {
+      background: linear-gradient(90deg, #ec9f05, #ff4e00);
+    }
+    .message {
+      margin-top: 15px;
+      text-align: center;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h2>Gestion du compte</h2>
+
+    <label for="newName">Nouveau nom de profil</label>
+    <input type="text" id="newName" placeholder="Entrez le nouveau nom..." />
+
+    <label for="password">Mot de passe actuel</label>
+    <input type="password" id="password" placeholder="Confirmez votre mot de passe..." />
+
+    <button id="updateNameBtn">Modifier le nom</button>
+    <button id="deleteAccountBtn" class="danger">Supprimer le compte</button>
+
+    <div class="message" id="message"></div>
+  </div>
+
+  <script type="module">
+    import { supabase } from './supabaseClient.js'
+
+    const updateNameBtn = document.getElementById('updateNameBtn')
+    const deleteAccountBtn = document.getElementById('deleteAccountBtn')
+    const passwordInput = document.getElementById('password')
+    const nameInput = document.getElementById('newName')
+    const message = document.getElementById('message')
+
+    // Affichage de message
+    const showMessage = (text, color = 'gold') => {
+      message.style.color = color
+      message.textContent = text
+    }
+
+    // Vérifie si l'utilisateur est connecté
+    async function checkSession() {
+      const session = (await supabase.auth.getSession()).data.session
+      if (!session) {
+        showMessage("Aucun utilisateur connecté. Redirection...", "red")
+        setTimeout(() => window.location.href = 'index.html', 3000)
+        return null
+      }
+      return session.user
+    }
+
+    // Vérifie le mot de passe avant action
+    async function verifyPassword(password) {
+      const session = (await supabase.auth.getSession()).data.session
+      const email = session?.user?.email
+      if (!email) return null
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+      if (error) {
+        showMessage("Mot de passe invalide.", "red")
+        return null
+      }
+      return data.user
+    }
+
+    // Modifier le nom
+    updateNameBtn.addEventListener('click', async () => {
+      const newName = nameInput.value.trim()
+      const password = passwordInput.value.trim()
+      if (!newName || !password) return showMessage("Remplissez tous les champs.", "red")
+
+      const currentUser = await checkSession()
+      if (!currentUser) return
+
+      const user = await verifyPassword(password)
+      if (!user) return
+
+      const { error } = await supabase
+        .from('users_profile')
+        .update({ nom: newName })
+        .eq('user_id', user.id)
+
+      if (error) showMessage("Erreur lors de la mise à jour.", "red")
+      else showMessage("Nom modifié avec succès 🎉", "lime")
+    })
+
+    // Supprimer le compte
+    deleteAccountBtn.addEventListener('click', async () => {
+      const password = passwordInput.value.trim()
+      if (!password) return showMessage("Entrez votre mot de passe.", "red")
+
+      const currentUser = await checkSession()
+      if (!currentUser) return
+
+      const user = await verifyPassword(password)
+      if (!user) return
+
+      const { error: profileErr } = await supabase
+        .from('users_profile')
+        .delete()
+        .eq('user_id', user.id)
+
+      const { error: authErr } = await supabase.auth.admin.deleteUser(user.id)
+
+      if (profileErr || authErr) {
+        showMessage("Erreur lors de la suppression du compte.", "red")
+      } else {
+        showMessage("Compte supprimé avec succès. Déconnexion...", "lime")
+        setTimeout(() => {
+          supabase.auth.signOut()
+          window.location.href = 'index.html'
+        }, 2500)
+      }
+    })
+
+    // Vérification automatique à l’ouverture
+    checkSession()
+  </script>
+
+</body>
+</html>
