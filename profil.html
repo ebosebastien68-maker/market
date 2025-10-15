@@ -939,37 +939,56 @@
         let userReactionsCache = {};
         let commentCountsCache = {};
 
-        // GAME VARIABLES
+        // GAME VARIABLES - Car Dodging (lane-based)
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         let gameRunning = false;
         let gamePaused = false;
         let score = 0;
         let level = 1;
-        let gameSpeed = 3;
-        let player = { x: 50, y: 0, width: 30, height: 30, velocityY: 0, jumping: false };
-        let obstacles = [];
+        let speed = 4; // base speed
+        let lanes = 3;
+        let laneWidth = 100;
+        let roadPadding = 20;
+        let player = { lane: 1, x: 0, y: 0, width: 36, height: 60, color: '#2563eb' };
+        let cars = [];
+        let spawnTimer = 0;
+        let spawnInterval = 60; // frames
         let animationId = null;
 
-        // Setup canvas
         function resizeCanvas() {
             canvas.width = canvas.offsetWidth;
             canvas.height = canvas.offsetHeight;
-            player.y = canvas.height - 50;
+            laneWidth = Math.max(80, Math.min(140, Math.floor((canvas.width - roadPadding * 2) / lanes)));
+            updatePlayerPosition();
         }
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
 
-        // GAME LOGIC
+        function laneX(laneIndex) {
+            const roadWidth = laneWidth * lanes;
+            const startX = (canvas.width - roadWidth) / 2;
+            return Math.floor(startX + laneIndex * laneWidth + (laneWidth - player.width) / 2);
+        }
+
+        function updatePlayerPosition() {
+            player.x = laneX(player.lane);
+            player.y = canvas.height - player.height - 16;
+        }
+
         function startGame() {
             if (gameRunning && !gamePaused) return;
             gameRunning = true;
             gamePaused = false;
-            if (score === 0) {
-                obstacles = [];
-                level = 1;
-                gameSpeed = 3;
-            }
+            score = 0;
+            level = 1;
+            speed = 4;
+            cars = [];
+            spawnTimer = 0;
+            player.lane = 1;
+            updatePlayerPosition();
+            document.getElementById('gameScore').textContent = score;
+            document.getElementById('gameLevel').textContent = level;
             document.getElementById('startBtn').style.display = 'none';
             document.getElementById('pauseBtn').style.display = 'block';
             gameLoop();
@@ -987,115 +1006,165 @@
             }
         }
 
-        function resetGame() {
+        function gameOver() {
             gameRunning = false;
             gamePaused = false;
-            score = 0;
-            level = 1;
-            gameSpeed = 3;
-            obstacles = [];
-            document.getElementById('gameScore').textContent = score;
-            document.getElementById('gameLevel').textContent = level;
+            cancelAnimationFrame(animationId);
+            alert(`Fin de partie ! Score: ${score}`);
             document.getElementById('startBtn').style.display = 'block';
             document.getElementById('pauseBtn').style.display = 'none';
-            player.y = canvas.height - 50;
-            player.velocityY = 0;
-            player.jumping = false;
+        }
+
+        function spawnCar() {
+            const lane = Math.floor(Math.random() * lanes);
+            const colors = ['#ef4444', '#22c55e', '#f59e0b', '#06b6d4', '#a855f7'];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            const height = 60 + Math.floor(Math.random() * 20);
+            cars.push({
+                lane,
+                x: laneX(lane),
+                y: -height,
+                width: player.width,
+                height,
+                color,
+            });
+        }
+
+        function drawRoad() {
+            // road background
+            ctx.fillStyle = '#2f3640';
+            const roadWidth = laneWidth * lanes;
+            const roadX = (canvas.width - roadWidth) / 2;
+            ctx.fillRect(roadX, 0, roadWidth, canvas.height);
+
+            // lane separators
+            ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+            ctx.lineWidth = 4;
+            ctx.setLineDash([20, 20]);
+            for (let i = 1; i < lanes; i++) {
+                const x = roadX + i * laneWidth;
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            ctx.setLineDash([]);
+        }
+
+        function drawCar(car) {
+            // body
+            ctx.fillStyle = car.color;
+            roundRect(ctx, car.x, car.y, car.width, car.height, 8, true, false);
+            // windows
+            ctx.fillStyle = 'rgba(255,255,255,0.8)';
+            roundRect(ctx, car.x + 6, car.y + 10, car.width - 12, 14, 4, true, false);
+            // wheels
+            ctx.fillStyle = '#111827';
+            ctx.fillRect(car.x - 4, car.y + 12, 6, 14);
+            ctx.fillRect(car.x + car.width - 2, car.y + 12, 6, 14);
+            ctx.fillRect(car.x - 4, car.y + car.height - 26, 6, 14);
+            ctx.fillRect(car.x + car.width - 2, car.y + car.height - 26, 6, 14);
+        }
+
+        function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
+            if (typeof radius === 'number') {
+                radius = { tl: radius, tr: radius, br: radius, bl: radius };
+            }
+            ctx.beginPath();
+            ctx.moveTo(x + radius.tl, y);
+            ctx.lineTo(x + width - radius.tr, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius.tr);
+            ctx.lineTo(x + width, y + height - radius.br);
+            ctx.quadraticCurveTo(x + width, y + height, x + width - radius.br, y + height);
+            ctx.lineTo(x + radius.bl, y + height);
+            ctx.quadraticCurveTo(x, y + height, x, y + height - radius.bl);
+            ctx.lineTo(x, y + radius.tl);
+            ctx.quadraticCurveTo(x, y, x + radius.tl, y);
+            ctx.closePath();
+            if (fill) ctx.fill();
+            if (stroke) ctx.stroke();
         }
 
         function gameLoop() {
             if (!gameRunning || gamePaused) return;
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawRoad();
 
-            // Draw ground
-            ctx.fillStyle = '#2d5016';
-            ctx.fillRect(0, canvas.height - 20, canvas.width, 20);
-
-            // Player physics
-            if (player.jumping) {
-                player.velocityY += 0.8;
-                player.y += player.velocityY;
-
-                if (player.y >= canvas.height - 50) {
-                    player.y = canvas.height - 50;
-                    player.jumping = false;
-                    player.velocityY = 0;
-                }
+            // spawn cars over time
+            spawnTimer++;
+            if (spawnTimer >= spawnInterval) {
+                spawnTimer = 0;
+                spawnCar();
             }
 
-            // Draw player
-            ctx.fillStyle = '#667eea';
-            ctx.fillRect(player.x, player.y, player.width, player.height);
-            ctx.strokeStyle = '#764ba2';
-            ctx.lineWidth = 3;
-            ctx.strokeRect(player.x, player.y, player.width, player.height);
-
-            // Spawn obstacles
-            if (Math.random() < 0.02 + (level * 0.005)) {
-                const height = 20 + Math.random() * 40;
-                obstacles.push({
-                    x: canvas.width,
-                    y: canvas.height - 20 - height,
-                    width: 20 + Math.random() * 30,
-                    height: height
-                });
-            }
-
-            // Update and draw obstacles
-            for (let i = obstacles.length - 1; i >= 0; i--) {
-                const obs = obstacles[i];
-                obs.x -= gameSpeed;
-
-                // Draw obstacle
-                ctx.fillStyle = '#dc2626';
-                ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
-                ctx.strokeStyle = '#991b1b';
-                ctx.lineWidth = 2;
-                ctx.strokeRect(obs.x, obs.y, obs.width, obs.height);
-
-                // Collision detection
-                if (player.x < obs.x + obs.width &&
-                    player.x + player.width > obs.x &&
-                    player.y < obs.y + obs.height &&
-                    player.y + player.height > obs.y) {
-                    resetGame();
-                    alert(`Game Over! Score final: ${score}`);
-                    return;
+            // update cars
+            for (let i = cars.length - 1; i >= 0; i--) {
+                const car = cars[i];
+                car.y += speed;
+                drawCar(car);
+                // collision
+                if (player.lane === car.lane) {
+                    const py = player.y, ph = player.height;
+                    if (car.y + car.height > py + 6 && car.y < py + ph - 6) {
+                        gameOver();
+                        return;
+                    }
                 }
-
-                // Remove off-screen obstacles and increment score
-                if (obs.x + obs.width < 0) {
-                    obstacles.splice(i, 1);
-                    score += 10;
+                // remove off-screen and score
+                if (car.y > canvas.height) {
+                    cars.splice(i, 1);
+                    score += 5;
                     document.getElementById('gameScore').textContent = score;
-
-                    // Level up every 100 points
-                    if (score % 100 === 0) {
+                    if (score % 50 === 0) {
                         level++;
-                        gameSpeed += 0.5;
                         document.getElementById('gameLevel').textContent = level;
+                        speed = Math.min(12, speed + 0.6);
+                        spawnInterval = Math.max(28, spawnInterval - 2);
                     }
                 }
             }
 
+            // draw player car on top
+            drawCar(player);
+
             animationId = requestAnimationFrame(gameLoop);
         }
 
-        // Jump on tap/click
-        canvas.addEventListener('click', () => {
-            if (gameRunning && !gamePaused && !player.jumping) {
-                player.jumping = true;
-                player.velocityY = -15;
+        function moveLeft() {
+            if (!gameRunning || gamePaused) return;
+            if (player.lane > 0) {
+                player.lane--;
+                updatePlayerPosition();
             }
+        }
+
+        function moveRight() {
+            if (!gameRunning || gamePaused) return;
+            if (player.lane < lanes - 1) {
+                player.lane++;
+                updatePlayerPosition();
+            }
+        }
+
+        // input handlers
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') moveLeft();
+            if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') moveRight();
         });
 
+        // swipe
+        let touchStartX = null;
         canvas.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            if (gameRunning && !gamePaused && !player.jumping) {
-                player.jumping = true;
-                player.velocityY = -15;
+            touchStartX = e.touches[0].clientX;
+        }, { passive: true });
+        canvas.addEventListener('touchend', (e) => {
+            if (touchStartX === null) return;
+            const dx = e.changedTouches[0].clientX - touchStartX;
+            if (Math.abs(dx) > 30) {
+                if (dx < 0) moveLeft(); else moveRight();
             }
+            touchStartX = null;
         });
 
         document.getElementById('startBtn').addEventListener('click', startGame);
@@ -1408,18 +1477,11 @@
 
             if (container.classList.contains('show') && container.innerHTML.trim() === '') {
                 container.innerHTML = '<div class="loader"><div class="spinner"></div></div>';
-                
                 try {
-                    const { data: comments, error } = await supabase
-                        .from('sessions_commentaires')
-                        .select('*, users_profile(prenom, nom)')
-                        .eq('article_id', articleId)
-                        .order('date_created', { ascending: false });
-
-                    if (error) throw error;
-
                     if (window.CommentsWidget) {
-                        window.CommentsWidget.render(container, articleId, comments, currentUser, userProfile);
+                        await window.CommentsWidget.render(container, articleId, null, currentUser, userProfile);
+                    } else {
+                        container.innerHTML = '<div class="empty-state"><i class="fas fa-comments"></i><p>Module commentaires indisponible.</p></div>';
                     }
                 } catch (error) {
                     console.error('Erreur chargement commentaires:', error);

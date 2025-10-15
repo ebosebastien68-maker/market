@@ -615,14 +615,14 @@
 <body>
     <!-- HEADER -->
     <div class="header">
-        <a href="profil.html" class="back-btn">
+        <a href="profil.html" class="back-btn" aria-label="Retour au profil">
             <i class="fas fa-arrow-left"></i>
         </a>
-        <div class="header-icon">
-            <i class="fas fa-skull-crossbones"></i>
+        <div class="header-icon" aria-hidden="true">
+            <i class="fas fa-cog"></i>
         </div>
-        <h1 class="header-title">Zone Dangereuse</h1>
-        <p class="header-subtitle">Modifications irréversibles - Procédez avec prudence</p>
+        <h1 class="header-title">Paramètres du compte</h1>
+        <p class="header-subtitle">Gérez vos informations et la sécurité</p>
     </div>
 
     <!-- CONTAINER -->
@@ -633,14 +633,12 @@
                 <div class="section-icon">
                     <i class="fas fa-user-edit"></i>
                 </div>
-                <h2 class="section-title">Modifier le Profil</h2>
+                <h2 class="section-title">Profil</h2>
             </div>
             <div class="section-body">
-                <div class="warning-banner">
-                    <i class="fas fa-exclamation-triangle warning-icon"></i>
-                    <div class="warning-text">
-                        Un code de vérification sera envoyé à votre email actuel pour confirmer toute modification.
-                    </div>
+                <div class="warning-banner" style="display:none" id="profileInfoBanner">
+                    <i class="fas fa-info-circle warning-icon"></i>
+                    <div class="warning-text">Vos modifications sensibles sont protégées par un code de vérification.</div>
                 </div>
 
                 <form id="profileForm">
@@ -673,11 +671,11 @@
                 <div class="section-icon">
                     <i class="fas fa-trash-alt"></i>
                 </div>
-                <h2 class="section-title">Supprimer le Compte</h2>
+                <h2 class="section-title">Supprimer le compte</h2>
             </div>
             <div class="section-body">
                 <div class="warning-banner">
-                    <i class="fas fa-skull warning-icon"></i>
+                    <i class="fas fa-triangle-exclamation warning-icon"></i>
                     <div class="warning-text">
                         <strong>ATTENTION :</strong> Cette action est IRRÉVERSIBLE. Toutes vos données seront définitivement supprimées.
                     </div>
@@ -692,13 +690,13 @@
     </div>
 
     <!-- VERIFICATION MODAL -->
-    <div id="verificationModal" class="modal-overlay">
+    <div id="verificationModal" class="modal-overlay" aria-hidden="true" role="dialog" aria-labelledby="verifyTitle">
         <div class="modal">
             <div class="modal-header">
                 <div class="modal-icon">
                     <i class="fas fa-shield-halved"></i>
                 </div>
-                <h3 class="modal-title">Vérification Requise</h3>
+                <h3 class="modal-title" id="verifyTitle">Vérification requise</h3>
                 <p class="modal-subtitle">Code envoyé par email</p>
             </div>
             <div class="modal-body">
@@ -731,23 +729,18 @@
     </div>
 
     <!-- DELETE CONFIRMATION MODAL -->
-    <div id="deleteModal" class="modal-overlay">
+    <div id="deleteModal" class="modal-overlay" aria-hidden="true" role="dialog" aria-labelledby="deleteTitle">
         <div class="modal">
             <div class="modal-header">
                 <div class="modal-icon">
                     <i class="fas fa-exclamation-triangle"></i>
                 </div>
-                <h3 class="modal-title">Dernière Chance</h3>
+                <h3 class="modal-title" id="deleteTitle">Confirmation de suppression</h3>
                 <p class="modal-subtitle">Cette action est irréversible</p>
             </div>
             <div class="modal-body">
-                <p class="modal-message" style="color: var(--danger-primary); font-weight: 700;">
-                    ⚠️ Vous êtes sur le point de SUPPRIMER DÉFINITIVEMENT votre compte.<br><br>
-                    • Tous vos articles seront supprimés<br>
-                    • Tous vos commentaires seront supprimés<br>
-                    • Toutes vos réactions seront supprimées<br>
-                    • Cette action ne peut PAS être annulée<br><br>
-                    Êtes-vous ABSOLUMENT sûr(e) ?
+                <p class="modal-message" style="color: var(--danger-primary); font-weight: 600;">
+                    Vous êtes sur le point de supprimer définitivement votre compte et l'ensemble de vos données (articles, commentaires, réactions, messages). Cette action ne peut pas être annulée.
                 </p>
 
                 <div class="loader" id="deleteLoader"></div>
@@ -765,9 +758,9 @@
     </div>
 
     <!-- ALERT POPUP -->
-    <div id="alertPopup" class="alert-popup">
+    <div id="alertPopup" class="alert-popup" role="status" aria-live="polite">
         <div class="alert-content">
-            <i class="fas fa-exclamation-circle alert-icon"></i>
+            <i class="fas fa-circle-info alert-icon"></i>
             <div class="alert-text" id="alertText"></div>
             <button class="alert-close" onclick="hideAlert()">
                 <i class="fas fa-times"></i>
@@ -802,7 +795,7 @@
 
                 loadUserData();
                 setupEventListeners();
-                showAlert('⚠️ Zone dangereuse chargée. Soyez prudent avec vos actions.', 'warning');
+                document.getElementById('profileInfoBanner').style.display = 'flex';
             } catch (error) {
                 console.error('Erreur initialisation:', error);
                 window.location.href = 'connexion.html';
@@ -894,7 +887,7 @@
                 return;
             }
 
-            showAlert('⚡ Génération du code de vérification...', 'info');
+            showAlert('Un code de vérification va vous être envoyé...', 'info');
 
             // Generate verification code
             verificationCode = generateCode();
@@ -905,7 +898,7 @@
             await sendVerificationEmail(email, verificationCode);
 
             showVerificationModal();
-            showAlert('✅ Code envoyé à votre email !', 'success');
+            showAlert('Code de vérification envoyé à votre email.', 'success');
         }
 
         function generateCode() {
@@ -914,7 +907,7 @@
 
         async function sendVerificationEmail(email, code) {
             // SIMULATION - En production, utilisez un service email réel
-            console.log(`📧 Code de vérification envoyé à ${email}: ${code}`);
+            console.log(`Code de vérification envoyé à ${email}: ${code}`);
             
             // Afficher le code dans la console pour le test
             setTimeout(() => {
@@ -948,7 +941,7 @@
             if (enteredCode !== verificationCode) {
                 document.getElementById('modalLoader').classList.remove('show');
                 document.getElementById('verifyBtn').disabled = false;
-                showAlert('❌ Code incorrect ! Vérifiez et réessayez.', 'error');
+                showAlert('Code incorrect. Réessayez.', 'error');
                 inputs.forEach(input => {
                     input.value = '';
                     input.style.borderColor = 'var(--danger-primary)';
@@ -988,7 +981,7 @@
                 }
 
                 hideVerificationModal();
-                showAlert('✅ Profil mis à jour avec succès !', 'success');
+                showAlert('Profil mis à jour avec succès.', 'success');
 
                 // Reload page after 2 seconds
                 setTimeout(() => {
@@ -1004,20 +997,19 @@
         // DELETE ACCOUNT
         function showDeleteModal() {
             document.getElementById('deleteModal').classList.add('show');
-            playScarySound();
-            showAlert('💀 ZONE EXTRÊMEMENT DANGEREUSE ACTIVÉE !', 'error');
+            showAlert('Confirmez la suppression de votre compte.', 'warning');
         }
 
         function hideDeleteModal() {
             document.getElementById('deleteModal').classList.remove('show');
-            showAlert('✅ Ouf ! Vous avez évité le pire.', 'success');
+            showAlert('Suppression annulée.', 'success');
         }
 
         async function handleDeleteRequest() {
             document.getElementById('deleteLoader').classList.add('show');
             document.getElementById('confirmDeleteBtn').disabled = true;
 
-            showAlert('⚡ Génération du code de vérification final...', 'info');
+            showAlert('Génération du code de vérification...', 'info');
 
             verificationCode = generateCode();
             pendingAction = 'delete_account';
@@ -1029,7 +1021,7 @@
             
             hideDeleteModal();
             showVerificationModal();
-            showAlert('📧 Code de vérification finale envoyé !', 'success');
+            showAlert('Code de vérification envoyé.', 'success');
         }
 
         async function executeAccountDeletion() {
@@ -1054,7 +1046,7 @@
                 await supabase.auth.signOut();
 
                 hideVerificationModal();
-                showAlert('☠️ Compte supprimé avec succès. Redirection...', 'success');
+                showAlert('Compte supprimé avec succès. Redirection...', 'success');
 
                 setTimeout(() => {
                     window.location.href = 'connexion.html';
@@ -1091,15 +1083,13 @@
             text.textContent = message;
 
             // Change icon based on type
-            if (type === 'error') {
-                icon.className = 'fas fa-exclamation-triangle alert-icon';
-            } else if (type === 'success') {
-                icon.className = 'fas fa-check-circle alert-icon';
-            } else if (type === 'warning') {
-                icon.className = 'fas fa-exclamation-circle alert-icon';
-            } else {
-                icon.className = 'fas fa-info-circle alert-icon';
-            }
+            const map = {
+              error: 'fas fa-circle-exclamation alert-icon',
+              success: 'fas fa-circle-check alert-icon',
+              warning: 'fas fa-triangle-exclamation alert-icon',
+              info: 'fas fa-circle-info alert-icon'
+            };
+            icon.className = map[type] || map.info;
 
             popup.classList.add('show');
 
@@ -1113,71 +1103,7 @@
             document.getElementById('alertPopup').classList.remove('show');
         }
 
-        // SCARY SOUND (simulation)
-        function playScarySound() {
-            // Create a beep sound using Web Audio API
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-
-            oscillator.frequency.value = 200;
-            oscillator.type = 'sine';
-
-            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-
-            oscillator.start(audioContext.currentTime);
-            oscillator.stop(audioContext.currentTime + 0.5);
-        }
-
-        // RANDOM SCARY MESSAGES
-        const scaryMessages = [
-            '👻 Êtes-vous sûr de vouloir faire ça ?',
-            '💀 Cette action ne peut pas être annulée...',
-            '⚠️ ATTENTION : Zone dangereuse détectée !',
-            '🔥 Vous jouez avec le feu...',
-            '☠️ Point de non-retour approché',
-            '⚡ Énergie dangereuse détectée',
-            '🌑 L\'obscurité vous observe...',
-            '⛔ Dernière chance de reculer'
-        ];
-
-        // Random scary message every 30 seconds
-        setInterval(() => {
-            if (Math.random() < 0.3) { // 30% chance
-                const msg = scaryMessages[Math.floor(Math.random() * scaryMessages.length)];
-                showAlert(msg, 'warning');
-            }
-        }, 30000);
-
-        // Glitch effect on hover danger elements
-        document.querySelectorAll('.btn-danger, .section-card.danger').forEach(el => {
-            el.addEventListener('mouseenter', () => {
-                el.style.animation = 'glitch 0.3s ease';
-            });
-            el.addEventListener('animationend', () => {
-                el.style.animation = '';
-            });
-        });
-
-        // Add random screen shake
-        function screenShake() {
-            document.body.style.animation = 'shake 0.5s ease';
-            setTimeout(() => {
-                document.body.style.animation = '';
-            }, 500);
-        }
-
-        // Shake on danger button hover
-        document.getElementById('deleteAccountBtn').addEventListener('mouseenter', () => {
-            if (Math.random() < 0.5) {
-                screenShake();
-                showAlert('⚠️ Vous êtes sûr de vouloir toucher à ça ?', 'warning');
-            }
-        });
+        // Remove horror/easter eggs and keep a clean UX
 
         // Close modals on ESC
         document.addEventListener('keydown', (e) => {

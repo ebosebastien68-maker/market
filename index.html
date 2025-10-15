@@ -1528,23 +1528,13 @@
 
             if (container.classList.contains('show') && container.innerHTML.trim() === '') {
                 container.innerHTML = '<div class="loader"><div class="spinner"></div></div>';
-                
                 try {
-                    const table = type === 'article' ? 'sessions_commentaires' : 'video_commentaires';
-                    const idField = type === 'article' ? 'article_id' : 'video_id';
-
-                    const { data: comments, error } = await supabase
-                        .from(table)
-                        .select('*, users_profile(prenom, nom)')
-                        .eq(idField, id)
-                        .order('date_created', { ascending: false });
-
-                    if (error) throw error;
-
                     if (type === 'article' && window.CommentsWidget) {
-                        window.CommentsWidget.render(container, id, comments, currentUser, userProfile);
+                        await window.CommentsWidget.render(container, id, null, currentUser, userProfile);
                     } else if (type === 'video' && window.VideoCommentsWidget) {
-                        window.VideoCommentsWidget.render(container, id, comments, currentUser, userProfile);
+                        await window.VideoCommentsWidget.render(container, id, null, currentUser, userProfile);
+                    } else {
+                        container.innerHTML = '<div class="empty-state"><i class="fas fa-comments"></i><p>Aucun composant de commentaires disponible.</p></div>';
                     }
                 } catch (error) {
                     console.error('Erreur chargement commentaires:', error);

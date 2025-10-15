@@ -101,7 +101,22 @@ window.VideoCommentsWidget = {
       if (!comments) {
         const { data, error } = await window.supabaseClient.supabase
           .from('video_commentaires')
-          .select(`*, users_profile(*), video_reponses(*, users_profile(*))`)
+          .select(`
+            *,
+            users_profile:user_id (
+              prenom,
+              nom,
+              role
+            ),
+            video_reponses (
+              *,
+              users_profile:user_id (
+                prenom,
+                nom,
+                role
+              )
+            )
+          `)
           .eq('video_id', this.videoId)
           .order('date_created', { ascending: false });
         if (error) throw error;
