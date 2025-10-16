@@ -185,21 +185,17 @@
                 if (authError) throw authError;
                 if (!user) throw new Error("La création du compte a échoué.");
 
-                // La policy SQL autorise l'utilisateur à insérer son propre profil.
                 const { error: profileError } = await supabase.from('users_profile').insert({
                     user_id: user.id,
                     prenom: prenom,
                     nom: nom
-                    // Le rôle 'user' est appliqué par défaut par la base de données.
                 });
 
                 if (profileError) throw profileError;
 
-                // MISE À JOUR : Message plus clair pour l'utilisateur.
                 showMessage('Inscription réussie ! Un email de confirmation a été envoyé. Veuillez vérifier votre boîte de réception pour activer votre compte.', 'success');
                 toggleLoader(false);
                 
-                // Vider le formulaire
                 e.target.reset();
 
             } catch (error) {
@@ -217,7 +213,7 @@
 
             try {
                 const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                    redirectTo: `${window.location.origin}/reset-password.html` 
+                    redirectTo: `${window.location.origin}/auth.html`
                 });
                 if (error) throw error;
                 
