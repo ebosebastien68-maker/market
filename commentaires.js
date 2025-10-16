@@ -266,7 +266,10 @@ window.CommentsWidget = {
     }
     
     const textarea = this.container.querySelector(`#comment-input-${this.articleId}`);
-    if (!textarea) return;
+    if (!textarea) {
+      console.error('Textarea introuvable pour article:', this.articleId);
+      return;
+    }
     
     const texte = textarea.value.trim();
     if (!texte) {
@@ -278,22 +281,32 @@ window.CommentsWidget = {
     if (btn) btn.disabled = true;
     
     try {
-      const { error } = await window.supabaseClient.supabase
+      console.log('📤 Envoi commentaire:', { article_id: this.articleId, user_id: this.currentUser.id, texte });
+      
+      const { data, error } = await window.supabaseClient.supabase
         .from('sessions_commentaires')
-        .insert([{
+        .insert({
           article_id: this.articleId,
           user_id: this.currentUser.id,
           texte: texte
-        }]);
+        })
+        .select();
         
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Erreur Supabase:', error);
+        throw error;
+      }
+      
+      console.log('✅ Commentaire publié:', data);
       
       textarea.value = '';
       this.showFeedback('Commentaire publié avec succès !', 'success');
-      await this.refreshComments();
+      
+      // Rafraîchir après un court délai pour laisser le temps à la base de données
+      setTimeout(() => this.refreshComments(), 300);
     } catch (err) {
-      console.error('Erreur publication commentaire:', err);
-      this.showFeedback('Erreur lors de la publication.', 'error');
+      console.error('❌ Erreur publication commentaire:', err);
+      this.showFeedback(`Erreur: ${err.message || 'Impossible de publier'}`, 'error');
     } finally {
       if (btn) btn.disabled = false;
     }
@@ -333,10 +346,9 @@ window.CommentsWidget = {
         const { error } = await window.supabaseClient.supabase
           .from('session_reponses')
           .insert([{
-            article_id: this.articleId,
+            session_id: commentId,
             user_id: this.currentUser.id,
-            texte: texte,
-            parent_id: commentId
+            texte: texte
           }]);
           
         if (error) throw error;
