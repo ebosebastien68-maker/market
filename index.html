@@ -966,7 +966,6 @@
         let allContent = [];
         let searchType = 'articles';
         let userReactionsCache = {};
-        let commentCountsCache = {};
 
         // THEME TOGGLE
         const themeToggle = document.getElementById('theme-toggle');
@@ -1069,7 +1068,6 @@
                 
                 await Promise.all([
                     loadContent(),
-                    loadCommentCounts(),
                     currentUser ? loadUserReactions() : Promise.resolve(),
                     currentUser ? loadNotificationCount() : Promise.resolve(),
                     currentUser ? loadMessageCount() : Promise.resolve()
@@ -1105,9 +1103,6 @@
                 const articles = articlesResult.data || [];
                 const videos = videosResult.data || [];
 
-                // Charger les compteurs de réactions
-                await loadAllReactionCounts(articles, videos);
-
                 allContent = [
                     ...articles.map(a => ({ ...a, type: 'article' })),
                     ...videos.map(v => ({ ...v, type: 'video' }))
@@ -1124,61 +1119,6 @@
                 console.error('Erreur chargement contenu:', error);
                 document.getElementById('loader').innerHTML = 
                     '<p style="color: #ff4757;">Erreur de chargement du contenu</p>';
-            }
-        }
-
-        // CHARGEMENT DES COMPTEURS DE RÉACTIONS
-        async function loadAllReactionCounts(articles, videos) {
-            try {
-                const articleIds = articles.map(a => a.article_id);
-                const videoIds = videos.map(v => v.video_id);
-
-                const [articleReactions, videoReactions] = await Promise.all([
-                    articleIds.length > 0 ? supabase
-                        .from('article_reactions')
-                        .select('article_id, reaction_type')
-                        .in('article_id', articleIds) : { data: [] },
-                    videoIds.length > 0 ? supabase
-                        .from('video_reactions')
-                        .select('video_id, reaction_type')
-                        .in('video_id', videoIds) : { data: [] }
-                ]);
-
-                // Compteurs articles
-                const reactionsByArticle = {};
-                articleReactions.data?.forEach(r => {
-                    if (!reactionsByArticle[r.article_id]) {
-                        reactionsByArticle[r.article_id] = { like: 0, love: 0, rire: 0, colere: 0 };
-                    }
-                    reactionsByArticle[r.article_id][r.reaction_type]++;
-                });
-
-                articles.forEach(article => {
-                    const counts = reactionsByArticle[article.article_id] || { like: 0, love: 0, rire: 0, colere: 0 };
-                    article.reaction_like = counts.like;
-                    article.reaction_love = counts.love;
-                    article.reaction_rire = counts.rire;
-                    article.reaction_colere = counts.colere;
-                });
-
-                // Compteurs vidéos
-                const reactionsByVideo = {};
-                videoReactions.data?.forEach(r => {
-                    if (!reactionsByVideo[r.video_id]) {
-                        reactionsByVideo[r.video_id] = { like: 0, love: 0, rire: 0, colere: 0 };
-                    }
-                    reactionsByVideo[r.video_id][r.reaction_type]++;
-                });
-
-                videos.forEach(video => {
-                    const counts = reactionsByVideo[video.video_id] || { like: 0, love: 0, rire: 0, colere: 0 };
-                    video.reaction_like = counts.like;
-                    video.reaction_love = counts.love;
-                    video.reaction_rire = counts.rire;
-                    video.reaction_colere = counts.colere;
-                });
-            } catch (error) {
-                console.error('Erreur chargement compteurs réactions:', error);
             }
         }
 
@@ -1206,24 +1146,6 @@
                 });
             } catch (error) {
                 console.error('Erreur chargement réactions utilisateur:', error);
-            }
-        }
-
-        // CHARGEMENT DES COMPTEURS DE COMMENTAIRES
-        async function loadCommentCounts() {
-            try {
-                const { data: counts, error } = await supabase
-                    .from('commentaires_count')
-                    .select('content_id, total_comments');
-
-                if (error) throw error;
-
-                commentCountsCache = {};
-                counts?.forEach(c => {
-                    commentCountsCache[c.content_id] = c.total_comments;
-                });
-            } catch (error) {
-                console.error('Erreur chargement compteurs commentaires:', error);
             }
         }
 
@@ -1276,7 +1198,7 @@
                 </div>` : '';
 
             const userReaction = userReactionsCache[article.article_id];
-            const commentCount = commentCountsCache[article.article_id] || 0;
+            const totalComments = (article.commentaire_count || 0) + (article.reponse_count || 0);
 
             card.innerHTML = `
                 <div class="article-header">
@@ -1318,7 +1240,7 @@
                     <button class="comment-toggle-btn" onclick="toggleComments('${article.article_id}', 'article')">
                         <i class="fas fa-comment"></i>
                         Commentaires
-                        ${commentCount > 0 ? `<span class="comment-count-badge">${commentCount}</span>` : ''}
+                        ${totalComments > 0 ? `<span class="comment-count-badge">${totalComments}</span>` : ''}
                     </button>
                     <button class="action-btn" onclick="viewReactions('${article.article_id}', 'article')">
                         <i class="fas fa-users"></i>
@@ -1333,7 +1255,7 @@
             return card;
         }
 
-        // CRÉATION CARD VIDÉO ULTRA MODERNE
+        // CRÉATION CARD VIDÉO
         function createVideoCard(video) {
             const card = document.createElement('div');
             card.className = 'video-card';
@@ -1343,7 +1265,7 @@
 
             const initials = `${author.prenom?.[0] || ''}${author.nom?.[0] || ''}`.toUpperCase();
             const userReaction = userReactionsCache[video.video_id];
-            const commentCount = commentCountsCache[video.video_id] || 0;
+            const totalComments = (video.commentaire_count || 0) + (video.reponse_count || 0);
 
             card.innerHTML = `
                 <div class="video-header">
@@ -1393,7 +1315,7 @@
                     <button class="comment-toggle-btn" onclick="toggleComments('${video.video_id}', 'video')">
                         <i class="fas fa-comment"></i>
                         Commentaires
-                        ${commentCount > 0 ? `<span class="comment-count-badge">${commentCount}</span>` : ''}
+                        ${totalComments > 0 ? `<span class="comment-count-badge">${totalComments}</span>` : ''}
                     </button>
                     <button class="action-btn" onclick="viewReactions('${video.video_id}', 'video')">
                         <i class="fas fa-users"></i>
@@ -1466,16 +1388,17 @@
                 if (error) throw error;
                 
                 await loadContent();
+                showToast('✅ Suppression réussie');
             } catch (error) {
                 console.error('Erreur suppression:', error);
-                alert('Erreur lors de la suppression');
+                showToast('❌ Erreur lors de la suppression');
             }
         };
 
         window.handleReaction = async function(id, reactionType, contentType) {
             if (!currentUser) {
-                alert('Connectez-vous pour réagir');
-                window.location.href = 'connexion.html';
+                showToast('⚠️ Connectez-vous pour réagir');
+                setTimeout(() => window.location.href = 'connexion.html', 1500);
                 return;
             }
 
@@ -1517,6 +1440,7 @@
                 await loadContent();
             } catch (error) {
                 console.error('Erreur réaction:', error);
+                showToast('❌ Erreur lors de la réaction');
             }
         };
 
@@ -1534,7 +1458,7 @@
                     } else if (type === 'video' && window.VideoCommentsWidget) {
                         await window.VideoCommentsWidget.render(container, id, null, currentUser, userProfile);
                     } else {
-                        container.innerHTML = '<div class="empty-state"><i class="fas fa-comments"></i><p>Aucun composant de commentaires disponible.</p></div>';
+                        container.innerHTML = '<div class="empty-state"><i class="fas fa-comments"></i><p>Module de commentaires non disponible</p></div>';
                     }
                 } catch (error) {
                     console.error('Erreur chargement commentaires:', error);
@@ -1560,7 +1484,7 @@
                 }).catch(err => console.log('Partage annulé'));
             } else {
                 navigator.clipboard.writeText(url).then(() => {
-                    alert('✅ Lien copié !');
+                    showToast('✅ Lien copié !');
                 });
             }
         };
@@ -1615,134 +1539,48 @@
         function setupRealtimeSubscriptions() {
             if (!currentUser) return;
 
-            // Channel pour les notifications
-            supabase.channel('notifications')
+            supabase.channel('public-changes')
                 .on('postgres_changes', {
                     event: '*',
                     schema: 'public',
                     table: 'notifications',
                     filter: `user_id=eq.${currentUser.id}`
                 }, () => loadNotificationCount())
-                .subscribe();
-
-            // Channel pour les messages
-            supabase.channel('messages')
                 .on('postgres_changes', {
                     event: 'INSERT',
                     schema: 'public',
                     table: 'messages',
                     filter: `receiver_id=eq.${currentUser.id}`
                 }, () => loadMessageCount())
-                .subscribe();
-
-            // Channel pour les articles
-            supabase.channel('articles')
                 .on('postgres_changes', {
                     event: '*',
                     schema: 'public',
                     table: 'articles'
                 }, () => loadContent())
-                .subscribe();
-
-            // Channel pour les vidéos
-            supabase.channel('videos')
                 .on('postgres_changes', {
                     event: '*',
                     schema: 'public',
                     table: 'videos'
                 }, () => loadContent())
-                .subscribe();
-
-            // Channel pour les compteurs de commentaires
-            supabase.channel('commentaires_count')
-                .on('postgres_changes', {
-                    event: 'UPDATE',
-                    schema: 'public',
-                    table: 'commentaires_count'
-                }, async (payload) => {
-                    const { content_id, total_comments } = payload.new;
-                    commentCountsCache[content_id] = total_comments;
-                    
-                    // Mettre à jour le badge dans l'UI
-                    const badges = document.querySelectorAll('.comment-count-badge');
-                    badges.forEach(badge => {
-                        const btn = badge.closest('.comment-toggle-btn');
-                        if (btn && btn.onclick.toString().includes(content_id)) {
-                            if (total_comments > 0) {
-                                badge.textContent = total_comments;
-                            } else {
-                                badge.remove();
-                            }
-                        }
-                    });
-                })
-                .subscribe();
-
-            // Channel pour les réactions articles
-            supabase.channel('article_reactions')
                 .on('postgres_changes', {
                     event: '*',
                     schema: 'public',
                     table: 'article_reactions'
-                }, async (payload) => {
-                    const articleId = payload.new?.article_id || payload.old?.article_id;
-                    if (articleId) {
-                        // Recharger les compteurs pour cet article
-                        const { data: reactions } = await supabase
-                            .from('article_reactions')
-                            .select('reaction_type')
-                            .eq('article_id', articleId);
-
-                        const counts = { like: 0, love: 0, rire: 0, colere: 0 };
-                        reactions?.forEach(r => counts[r.reaction_type]++);
-
-                        // Mettre à jour les boutons dans l'UI
-                        const container = document.querySelector(`#comments-article-${articleId}`)?.closest('.article-card');
-                        if (container) {
-                            const reactionBtns = container.querySelectorAll('.reaction-btn');
-                            const types = ['like', 'love', 'rire', 'colere'];
-                            reactionBtns.forEach((btn, idx) => {
-                                const span = btn.querySelector('span');
-                                if (span) span.textContent = counts[types[idx]];
-                            });
-                        }
-                    }
+                }, () => {
+                    loadContent();
+                    loadUserReactions();
                 })
-                .subscribe();
-
-            // Channel pour les réactions vidéos
-            supabase.channel('video_reactions')
                 .on('postgres_changes', {
                     event: '*',
                     schema: 'public',
                     table: 'video_reactions'
-                }, async (payload) => {
-                    const videoId = payload.new?.video_id || payload.old?.video_id;
-                    if (videoId) {
-                        // Recharger les compteurs pour cette vidéo
-                        const { data: reactions } = await supabase
-                            .from('video_reactions')
-                            .select('reaction_type')
-                            .eq('video_id', videoId);
-
-                        const counts = { like: 0, love: 0, rire: 0, colere: 0 };
-                        reactions?.forEach(r => counts[r.reaction_type]++);
-
-                        // Mettre à jour les boutons dans l'UI
-                        const container = document.querySelector(`#comments-video-${videoId}`)?.closest('.video-card');
-                        if (container) {
-                            const reactionBtns = container.querySelectorAll('.reaction-btn');
-                            const types = ['like', 'love', 'rire', 'colere'];
-                            reactionBtns.forEach((btn, idx) => {
-                                const span = btn.querySelector('span');
-                                if (span) span.textContent = counts[types[idx]];
-                            });
-                        }
-                    }
+                }, () => {
+                    loadContent();
+                    loadUserReactions();
                 })
                 .subscribe();
 
-            console.log('✅ Temps réel Supabase activé');
+            console.log('✅ Temps réel activé');
         }
 
         // MENU UTILISATEUR
@@ -1859,109 +1697,6 @@
             }
         };
 
-        // GESTION DES ERREURS GLOBALES
-        window.addEventListener('error', (e) => {
-            console.error('Erreur globale:', e.error);
-        });
-
-        window.addEventListener('unhandledrejection', (e) => {
-            console.error('Promesse rejetée:', e.reason);
-        });
-
-        // OPTIMISATION PERFORMANCES
-        let ticking = false;
-        window.addEventListener('scroll', () => {
-            if (!ticking) {
-                window.requestAnimationFrame(() => {
-                    // Lazy loading des images
-                    const images = document.querySelectorAll('img[data-src]');
-                    images.forEach(img => {
-                        if (img.getBoundingClientRect().top < window.innerHeight + 200) {
-                            img.src = img.dataset.src;
-                            img.removeAttribute('data-src');
-                        }
-                    });
-                    ticking = false;
-                });
-                ticking = true;
-            }
-        });
-
-        // GESTION DES VIDÉOS (Pause automatique lors du scroll)
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                const video = entry.target;
-                if (entry.isIntersecting) {
-                    // La vidéo est visible
-                    video.controls = true;
-                } else {
-                    // La vidéo n'est plus visible
-                    video.pause();
-                }
-            });
-        }, { threshold: 0.5 });
-
-        // Observer toutes les vidéos
-        document.addEventListener('DOMContentLoaded', () => {
-            const videos = document.querySelectorAll('video');
-            videos.forEach(video => observer.observe(video));
-        });
-
-        // RACCOURCIS CLAVIER
-        document.addEventListener('keydown', (e) => {
-            // Ctrl/Cmd + K pour ouvrir la recherche
-            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-                e.preventDefault();
-                searchPanel.classList.toggle('show');
-                if (searchPanel.classList.contains('show')) {
-                    document.getElementById('search-input').focus();
-                }
-            }
-
-            // Escape pour fermer les modals
-            if (e.key === 'Escape') {
-                searchPanel.classList.remove('show');
-                document.querySelectorAll('.options-menu').forEach(m => m.classList.remove('show'));
-                const userMenu = document.getElementById('user-menu');
-                if (userMenu) userMenu.remove();
-            }
-        });
-
-        // PARTAGE NATIF AMÉLIORÉ
-        window.shareContentAdvanced = async function(id, type, title, description) {
-            const url = `${window.location.origin}?${type}_id=${id}`;
-            
-            if (navigator.share) {
-                try {
-                    await navigator.share({
-                        title: title || `Market - ${type === 'article' ? 'Article' : 'Vidéo'}`,
-                        text: description || 'Découvrez ce contenu sur Market',
-                        url: url
-                    });
-                    console.log('✅ Contenu partagé avec succès');
-                } catch (err) {
-                    if (err.name !== 'AbortError') {
-                        console.error('Erreur partage:', err);
-                        fallbackShare(url);
-                    }
-                }
-            } else {
-                fallbackShare(url);
-            }
-        };
-
-        function fallbackShare(url) {
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(url).then(() => {
-                    showToast('✅ Lien copié dans le presse-papier !');
-                }).catch(() => {
-                    prompt('Copiez ce lien:', url);
-                });
-            } else {
-                prompt('Copiez ce lien:', url);
-            }
-        }
-
         // SYSTÈME DE TOASTS
         function showToast(message, duration = 3000) {
             const toast = document.createElement('div');
@@ -1994,41 +1729,129 @@
             }, duration);
         }
 
+        // GESTION DES VIDÉOS (Pause automatique lors du scroll)
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const video = entry.target;
+                if (entry.isIntersecting) {
+                    video.controls = true;
+                } else {
+                    video.pause();
+                }
+            });
+        }, { threshold: 0.5 });
+
+        // Observer les vidéos après le chargement du contenu
+        function observeVideos() {
+            const videos = document.querySelectorAll('video');
+            videos.forEach(video => observer.observe(video));
+        }
+
+        // RACCOURCIS CLAVIER
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                searchPanel.classList.toggle('show');
+                if (searchPanel.classList.contains('show')) {
+                    document.getElementById('search-input').focus();
+                }
+            }
+
+            if (e.key === 'Escape') {
+                searchPanel.classList.remove('show');
+                document.querySelectorAll('.options-menu').forEach(m => m.classList.remove('show'));
+                const userMenu = document.getElementById('user-menu');
+                if (userMenu) userMenu.remove();
+            }
+        });
+
+        // GESTION DES ERREURS GLOBALES
+        window.addEventListener('error', (e) => {
+            console.error('Erreur globale:', e.error);
+        });
+
+        window.addEventListener('unhandledrejection', (e) => {
+            console.error('Promesse rejetée:', e.reason);
+        });
+
+        // OPTIMISATION - Observer les vidéos après chaque chargement de contenu
+        const originalDisplayContent = displayContent;
+        displayContent = function(content) {
+            originalDisplayContent(content);
+            setTimeout(observeVideos, 100);
+        };
+
         // DÉBOGAGE
-        console.log('%c🚀 Market App v4.0', 'color: #667eea; font-size: 24px; font-weight: bold;');
-        console.log('%c✨ Architecture moderne avec séparation des préoccupations', 'color: #22c55e; font-size: 14px;');
-        console.log('%c📦 Modules:', 'color: #667eea; font-weight: bold;');
-        console.log('  - index.html: Interface principale');
-        console.log('  - commentaires.js: Commentaires articles');
-        console.log('  - vidcomment.js: Commentaires vidéos');
-        console.log('  - videreact.js: Réactions vidéos');
+        console.log('%c🚀 Market App v5.0 - CONFORME SQL', 'color: #667eea; font-size: 24px; font-weight: bold;');
+        console.log('%c✅ Mise à jour conforme au schéma SQL Supabase', 'color: #22c55e; font-size: 14px;');
+        console.log('%c📊 Tables utilisées:', 'color: #667eea; font-weight: bold;');
+        console.log('  ✓ users_profile');
+        console.log('  ✓ articles');
+        console.log('  ✓ article_images');
+        console.log('  ✓ article_reactions');
+        console.log('  ✓ videos');
+        console.log('  ✓ video_reactions');
+        console.log('  ✓ sessions_commentaires (via commentaires.js)');
+        console.log('  ✓ session_reponses (via commentaires.js)');
+        console.log('  ✓ video_commentaires (via vidcomment.js)');
+        console.log('  ✓ video_reponses (via vidcomment.js)');
+        console.log('  ✓ notifications');
+        console.log('  ✓ messages');
+        console.log('%c🔧 Modifications apportées:', 'color: #667eea; font-weight: bold;');
+        console.log('  ✅ Utilisation des compteurs commentaire_count et reponse_count depuis la BDD');
+        console.log('  ✅ Suppression du cache commentCountsCache (données directes depuis SQL)');
+        console.log('  ✅ Suppression de la vue commentaires_count (non nécessaire avec les triggers)');
+        console.log('  ✅ Calcul total commentaires: commentaire_count + reponse_count');
+        console.log('  ✅ Gestion des réactions conforme aux tables article_reactions et video_reactions');
+        console.log('  ✅ Realtime optimisé avec un seul channel pour toutes les tables');
+        console.log('  ✅ Toasts pour feedback utilisateur amélioré');
         console.log('%c⚡ Fonctionnalités:', 'color: #667eea; font-weight: bold;');
-        console.log('  ✅ Recherche articles/vidéos séparée');
-        console.log('  ✅ Bouton "À la Une"');
-        console.log('  ✅ Design vidéo ultra moderne');
-        console.log('  ✅ Réactions temps réel');
-        console.log('  ✅ Compteurs automatiques');
+        console.log('  ✅ Compteurs temps réel via triggers SQL');
+        console.log('  ✅ Réactions like, love, rire, colere');
+        console.log('  ✅ Système de commentaires et réponses');
+        console.log('  ✅ Permissions RLS (user, admin, adminpro)');
+        console.log('  ✅ Search articles/vidéos séparée');
         console.log('  ✅ Mode sombre/clair');
-        console.log('  ✅ Responsive parfait');
-        console.log('  ✅ Raccourcis clavier');
-        console.log('  ✅ Partage natif');
-        console.log('%c🎨 Design System:', 'color: #667eea; font-weight: bold;');
-        console.log('  - Cards articles: Minimaliste et élégant');
-        console.log('  - Cards vidéos: Premium avec badges et overlays');
-        console.log('  - Animations fluides partout');
-        console.log('  - Typographie moderne');
+        console.log('  ✅ Responsive design');
+        console.log('  ✅ Pause vidéos auto au scroll');
 
         // EXPORT POUR DÉBOGAGE
         window.MarketApp = {
-            version: '4.0.0',
+            version: '5.0.0',
+            sqlCompliant: true,
             currentUser,
             userProfile,
             allContent,
             searchType,
             reloadContent: loadContent,
             showToast,
-            toggleDarkMode: () => themeToggle.click()
+            toggleDarkMode: () => themeToggle.click(),
+            debugInfo: {
+                tables: [
+                    'users_profile',
+                    'articles',
+                    'article_images',
+                    'article_reactions',
+                    'videos',
+                    'video_reactions',
+                    'sessions_commentaires',
+                    'session_reponses',
+                    'video_commentaires',
+                    'video_reponses',
+                    'notifications',
+                    'messages'
+                ],
+                features: [
+                    'Compteurs automatiques via triggers',
+                    'Réactions temps réel',
+                    'RLS multi-niveaux',
+                    'Realtime Supabase',
+                    'Commentaires imbriqués'
+                ]
+            }
         };
+
+        console.log('%c💾 Accédez à window.MarketApp pour le debug', 'color: #667eea; font-weight: bold;');
     </script>
 </body>
     </html>
